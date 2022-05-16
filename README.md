@@ -1,0 +1,2 @@
+# Botmocracy
+The Botmocracy Bot
