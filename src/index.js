@@ -1,6 +1,7 @@
 import { Intents, Client } from "discord.js";
+import dotenv from "dotenv";
 
-require('dotenv').config();
+dotenv.config();
 
 const intents = new Intents();
 intents.add(Intents.FLAGS.GUILD_MESSAGES);
