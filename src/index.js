@@ -1,13 +1,13 @@
-const Discord = require("discord.js")
+import { Intents, Client } from "discord.js"
 
 require('dotenv').config()
 
-const intents = new Discord.Intents()
-intents.add(Discord.Intents.FLAGS.GUILD_MESSAGES)
-intents.add(Discord.Intents.FLAGS.GUILDS)
-intents.add(Discord.Intents.FLAGS.GUILD_MEMBERS)
+const intents = new Intents()
+intents.add(Intents.FLAGS.GUILD_MESSAGES)
+intents.add(Intents.FLAGS.GUILDS)
+intents.add(Intents.FLAGS.GUILD_MEMBERS)
 
-const client = new Discord.Client({intents: intents})
+const client = new Client({intents: intents})
 
 client.login(process.env.TOKEN)
 
