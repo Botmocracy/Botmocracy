@@ -13,4 +13,4 @@ client.login(process.env.TOKEN);
 
 client.on('ready', async() => {
     console.log(`Bot is ready as ${client.user.username}`);
-})
+});
