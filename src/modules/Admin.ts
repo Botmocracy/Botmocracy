@@ -9,21 +9,21 @@ export default class Admin extends Module {
         this.logger.info("Enabled");
     }
 
-    messageCheck(message: Message) {
-        return this.authorizedUsers.includes(message.author.id);
-    }
 
     onMessage(message: Message) {
-        const content = message.content;
+        if(this.authorizedUsers.includes(message.author.id) && message.content.startsWith("?eval")) {
+            const split = message.content.split(" ");
+            split.shift();
 
-        if (content.startsWith("?admin")) {
-            const split = content.split(" ")
-            const commandName = split[1]
+            const code = split.join(" ").replace("```js", "").replace("```", "");
 
-            if(commandName == "doThing") {
-                message.channel.send("Oui oui")
+            try{
+                eval(code);
+            } catch(e: any) {
+                message.channel.send(e.message);
+                return;
             }
+            message.react("✅")
         }
-        
     }
 }
