@@ -17,7 +17,7 @@ export default class Module {
     messageCheck() { return true; }
 
     _onMessage(message) {
-        if (this.messageCheck()) {
+        if (this.messageCheck(message)) {
             this.onMessage(message);
         }
     }
