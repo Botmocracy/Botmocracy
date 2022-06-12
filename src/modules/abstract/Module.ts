@@ -10,23 +10,15 @@ export default class Module {
         debug: (message: String) => console.log(`[${this.name} - DEBUG] ${message}`)
     }
 
-    client: Client;
+    client: Client|null = null;
 
-    constructor(client: Client) {
+    initialise(client: Client) {
         this.client = client;
-        this.client.on("messageCreate", msg => this._onMessage(msg));
+        this.client.on("messageCreate", msg => this.onMessage(msg));
         this.onEnable();
     }
 
     onEnable() { }
-
-    messageCheck(message: Message) { return true; }
-
-    _onMessage(message: Message) {
-        if (this.messageCheck(message)) {
-            this.onMessage(message);
-        }
-    }
 
     onMessage(message: Message) { }
 }

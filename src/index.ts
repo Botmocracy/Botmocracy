@@ -1,5 +1,5 @@
 import { Intents, Client } from "discord.js";
-import dotenv from "dotenv";
+import * as dotenv from "dotenv";
 import { readdirSync } from "fs";
 import Module from "./modules/abstract/Module";
 
@@ -19,8 +19,10 @@ client.on('ready', async() => {
     moduleFiles.forEach(f => {
         if (!f.endsWith(".ts")) return; // Ignore non-ts files
         import(`./modules/${f}`).then(M => {
-            const module = new M.default(client);
+            const module = new M.default();
             if (!(module instanceof Module)) throw new Error(`Module ${f} does not extend "Module"`);
+
+            module.initialise(client)
         });
     });
 });
