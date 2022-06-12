@@ -26,7 +26,6 @@ client.on('ready', async() => {
             const module = new M.default();
             if (!module instanceof Module) throw new Error(`Module ${f} does not extend "Module"`);
             module.initialise(client);
-            module.onEnable();
         });
     });
 });
