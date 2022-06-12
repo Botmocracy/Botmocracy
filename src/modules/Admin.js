@@ -1,9 +1,9 @@
 import Module from "./abstract/Module.js";
 
 export default class ExampleModule extends Module {
-    name = "Module McModuleface";
+    name = "Admin";
 
     onEnable() {
-        this.logger.info("aaaaaaaa");
+        this.logger.info("Enabled");
     }
 }

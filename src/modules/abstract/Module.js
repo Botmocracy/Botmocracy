@@ -8,11 +8,19 @@ export default class Module {
 
     initialise(client) {
         this.client = client;
-        this.client.on("messageCreate", msg => this.onMessage(msg));
+        this.client.on("messageCreate", msg => this._onMessage(msg));
         this.onEnable();
     }
 
     onEnable() { }
+
+    messageCheck() { return true; }
+
+    _onMessage(message) {
+        if (this.messageCheck()) {
+            this.onMessage(message);
+        }
+    }
 
     onMessage(message) { }
 }
