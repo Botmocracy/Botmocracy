@@ -1,19 +1,19 @@
-import Module from "./abstract/Module.js";
+import { Client, Message } from "discord.js";
+import Module from "./abstract/Module";
 
-export default class ExampleModule extends Module {
-    name = "Admin";
-
+export default class Admin extends Module {
     authorizedUsers = ["468534859611111436", "716779626759716914", "644052617500164097"];
 
     onEnable() {
+        this.name = "Admin";
         this.logger.info("Enabled");
     }
 
-    messageCheck(message) {
-        return this.authorizedUsers.includes(message.author.id)
+    messageCheck(message: Message) {
+        return this.authorizedUsers.includes(message.author.id);
     }
 
-    onMessage(message) {
+    onMessage(message: Message) {
         const content = message.content;
 
         if (content.startsWith("?admin")) {
