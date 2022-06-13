@@ -10,15 +10,15 @@ export default class Module {
         debug: (message: String) => console.log(`[${this.name} - DEBUG] ${message}`)
     }
 
-    client: Client|null = null;
+    client: Client|null = null; // |null is required bcs of typescript
 
-    initialise(client: Client) {
+    initialise(client: Client): void {
         this.client = client;
         this.client.on("messageCreate", msg => this.onMessage(msg));
         this.onEnable();
     }
 
-    onEnable() { }
+    onEnable(): void { }
 
-    onMessage(message: Message) { }
+    onMessage(message: Message): void { }
 }
