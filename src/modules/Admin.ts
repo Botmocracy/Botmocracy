@@ -15,7 +15,7 @@ export default class Admin extends Module {
             const split = message.content.split(" ");
             split.shift();
 
-            const code = split.join(" ").replace("```js", "").replace("```", "");
+            const code = split.join(" ").replace("```js", "").replace("```ts", "").replace("```", "");
 
             try{
                 const res = eval(code);
