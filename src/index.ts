@@ -2,8 +2,11 @@ import { Intents, Client, Collection } from "discord.js";
 import * as dotenv from "dotenv";
 import { readdirSync } from "fs";
 import Module from "./modules/abstract/Module";
+import * as mongoose from 'mongoose';
 
 dotenv.config();
+
+mongoose.connect((process.env.MONGO_STRING as string))
 
 const intents = new Intents();
 intents.add(Intents.FLAGS.GUILD_MESSAGES);
@@ -28,5 +31,6 @@ client.on('ready', async() => {
         });
     });
 });
+
 
 client.login(process.env.TOKEN);
