@@ -1,4 +1,4 @@
-import { Intents, Client } from "discord.js";
+import { Intents, Client, Collection } from "discord.js";
 import * as dotenv from "dotenv";
 import { readdirSync } from "fs";
 import Module from "./modules/abstract/Module";
@@ -12,6 +12,8 @@ intents.add(Intents.FLAGS.GUILD_MEMBERS);
 
 const client = new Client({intents: intents});
 
+export const modules = new Collection();
+
 client.on('ready', async() => {
     // Do module things
     console.log("Enabling modules");
@@ -21,7 +23,7 @@ client.on('ready', async() => {
         import(`./modules/${f}`).then(M => {
             const module = new M.default();
             if (!(module instanceof Module)) throw new Error(`Module ${f} does not extend "Module"`);
-
+            modules.set(module.name, module);
             module.initialise(client)
         });
     });
