@@ -7,4 +7,4 @@ const townSchema = new Schema({
     coords: String
 })
 
-module.exports = model("Town", townSchema);
+export default model("Town", townSchema);
