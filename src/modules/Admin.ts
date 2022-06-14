@@ -1,4 +1,5 @@
 import { Message } from "discord.js";
+import { modules } from "..";
 import Module from "./abstract/Module";
 
 export default class Admin extends Module {
