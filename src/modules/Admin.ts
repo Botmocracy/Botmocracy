@@ -14,7 +14,7 @@ export default class Admin extends Module {
         this.logger.info("Enabled");
     }
 
-    onReady(modules: Collection<string, Module>): void {
+    onModulesLoaded(modules: Collection<string, Module>): void {
         this.commandManager = (modules.get("CommandManager") as CommandManager);
         this.commandManager.registerCommand({
             name: "addtown", allowedRoles: ["985426658922201158"], executor(message, args) {

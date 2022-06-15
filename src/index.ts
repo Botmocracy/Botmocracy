@@ -31,7 +31,7 @@ client.on('ready', async () => {
 
             if (index === moduleFiles.length - 1) { // Since this is an async function, we need to run the ready events when it ends
                 modules.forEach((value, key) => {
-                    value.onReady(modules);
+                    value.onModulesLoaded(modules);
                 });
             }
         });
