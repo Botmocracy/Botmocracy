@@ -15,7 +15,6 @@ export default class Admin extends Module {
 
     onReady(modules: Collection<string, Module>): void {
         this.commandManager = (modules.get("CommandManager") as CommandManager);
-        this.logger.info("e");
         this.commandManager.registerCommand({name: "addtown", allowedRoles: ["985426658922201158"], executor(message, args) {
             if(args.length < 6) {
                 message.channel.send("Syntax: `addtown mayor depmayor x y z name`");
