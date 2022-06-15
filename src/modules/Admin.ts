@@ -1,5 +1,4 @@
 import { Message, MessageEmbed } from "discord.js";
-import { modules } from "..";
 import Module from "./abstract/Module";
 import Town from "../schema/Town";
 
