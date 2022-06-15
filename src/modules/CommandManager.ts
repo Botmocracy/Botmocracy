@@ -10,7 +10,7 @@ export default class CommandManager extends Module {
     onEnable() {
         this.logger.info("Enabled");
         this.registerCommand({ name: "ping", executor: (message, args) => {
-            
+            message.reply("Pong!");
         }});
     }
 

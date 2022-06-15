@@ -15,7 +15,7 @@ intents.add(Intents.FLAGS.GUILD_MEMBERS);
 
 const client = new Client({intents: intents});
 
-export const modules = new Collection();
+export const modules = new Collection<string, Module>();
 
 client.on('ready', async() => {
     // Do module things
@@ -30,6 +30,10 @@ client.on('ready', async() => {
             module.initialise(client);
         });
     });
+
+    modules.forEach(function(val, key) {
+        val.onReady(modules);
+    })
 });
 
 

@@ -1,4 +1,4 @@
-import { Client, Message } from "discord.js";
+import { Client, Collection, Message } from "discord.js";
 
 export default class Module {
     name = "";
@@ -19,6 +19,8 @@ export default class Module {
     }
 
     onEnable(): void { }
+
+    onReady(modules: Collection<string, Module>): void {} // Runs when all modules are loaded
 
     onMessage(message: Message): void { }
 }
