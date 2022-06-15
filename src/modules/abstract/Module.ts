@@ -1,19 +1,15 @@
 import { Client, Collection, Message } from "discord.js";
+import Logger from "../../util/Logger";
 
 export default class Module {
     name = "";
 
-    logger = {
-        info: (message: String) => console.log(`[${this.name} - INFO] ${message}`),
-        warn: (message: String) => console.warn(`[${this.name} - WARN] ${message}`),
-        error: (message: String) => console.error(`[${this.name} - ERROR] ${message}`),
-        debug: (message: String) => console.log(`[${this.name} - DEBUG] ${message}`)
-    }
-
+    logger : Logger = new Logger("");
     client: Client | null = null; // |null is required bcs of typescript
 
     initialise(client: Client): void {
         this.client = client;
+        this.logger = new Logger(this.name);
         this.client.on("messageCreate", msg => this.onMessage(msg));
         this.onEnable();
     }
