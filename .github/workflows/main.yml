@@ -1,11 +1,1 @@
-- name: TypeScript Build
-  # You may pin to the exact commit or the version.
-  # uses: alexthemaster/action-build-typescript@ca4abf142f236aba57ae954c4f10615b006d1e6e
-  uses: alexthemaster/action-build-typescript@v1.2.1
-  with:
-    # Whether or not to push the compiled code to a different branch
-    pushToBranch: # optional
-    # The name of the branch the action should push the compiled code
-    branch: # optional, default is dist
-    # Your GitHub secret token
-    githubToken: # optional
+
