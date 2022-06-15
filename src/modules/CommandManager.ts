@@ -9,9 +9,11 @@ export default class CommandManager extends Module {
 
     onEnable() {
         this.logger.info("Enabled");
-        this.registerCommand({ name: "ping", executor: (message, args) => {
-            message.reply("Pong!");
-        }});
+        this.registerCommand({
+            name: "ping", executor: (message, args) => {
+                message.reply("Pong!");
+            }
+        });
     }
 
     onMessage(message: Message) {
@@ -20,7 +22,7 @@ export default class CommandManager extends Module {
         const args = message.content.substring(this.prefix.length).split(" ");
 
         const commandName = args.shift();
-        if (!commandName) return; 
+        if (!commandName) return;
 
         const command = this.commands.get(commandName);
         if (!command) return;
@@ -29,14 +31,14 @@ export default class CommandManager extends Module {
         if (!command.allowedPermissions && !command.allowedRoles) return this.executeCommand(command, message, args);
 
         if (command.allowedPermissions)
-        for (const permission of command.allowedPermissions) {
-            if (message.member?.permissions.has(permission)) return this.executeCommand(command, message, args);
-        }
+            for (const permission of command.allowedPermissions) {
+                if (message.member?.permissions.has(permission)) return this.executeCommand(command, message, args);
+            }
 
         if (command.allowedRoles)
-        for (const role of command.allowedRoles) {
-            if (message.member?.roles.cache.has(role.toString())) return this.executeCommand(command, message, args);
-        }
+            for (const role of command.allowedRoles) {
+                if (message.member?.roles.cache.has(role.toString())) return this.executeCommand(command, message, args);
+            }
 
         message.reply("You do not have permission to execute this command.");
     }

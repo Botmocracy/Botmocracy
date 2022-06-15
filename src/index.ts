@@ -13,11 +13,11 @@ intents.add(Intents.FLAGS.GUILD_MESSAGES);
 intents.add(Intents.FLAGS.GUILDS);
 intents.add(Intents.FLAGS.GUILD_MEMBERS);
 
-const client = new Client({intents: intents});
+const client = new Client({ intents: intents });
 
 export const modules = new Collection<string, Module>();
 
-client.on('ready', async() => {
+client.on('ready', async () => {
     // Do module things
     console.log("Enabling modules");
     const moduleFiles = readdirSync("src/modules");
@@ -29,7 +29,7 @@ client.on('ready', async() => {
             modules.set(module.name, module);
             module.initialise(client);
 
-            if(index === moduleFiles.length - 1) { // Since this is an async function, we need to run the ready events when it ends
+            if (index === moduleFiles.length - 1) { // Since this is an async function, we need to run the ready events when it ends
                 modules.forEach((value, key) => {
                     value.onReady(modules);
                 });

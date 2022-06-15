@@ -10,7 +10,7 @@ export default class Module {
         debug: (message: String) => console.log(`[${this.name} - DEBUG] ${message}`)
     }
 
-    client: Client|null = null; // |null is required bcs of typescript
+    client: Client | null = null; // |null is required bcs of typescript
 
     initialise(client: Client): void {
         this.client = client;
@@ -20,7 +20,7 @@ export default class Module {
 
     onEnable(): void { }
 
-    onReady(modules: Collection<string, Module>): void {} // Runs when all modules are loaded
+    onReady(modules: Collection<string, Module>): void { } // Runs when all modules are loaded
 
     onMessage(message: Message): void { }
 }
