@@ -28,10 +28,11 @@ client.on('ready', async() => {
             if (!(module instanceof Module)) throw new Error(`Module ${f} does not extend "Module"`);
             modules.set(module.name, module);
             module.initialise(client);
-            if(index === moduleFiles.length - 1) { // Run ready events
+
+            if(index === moduleFiles.length - 1) { // Since this is an async function, we need to run the ready events when it ends
                 modules.forEach((value, key) => {
                     value.onReady(modules);
-                })
+                });
             }
         });
     });
