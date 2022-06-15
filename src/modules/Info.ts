@@ -20,10 +20,8 @@ export default class Info extends Module {
         let fullBody = '';
 
         for await (const data of result.body) {
-            fullBody += data.toString();
+            fullBody += data.toString(); // ok but why doesn't it just send it as a string...
         }
-
-        this.logger.info(fullBody)
 
         const towns: [{[key: string]: any}] = JSON.parse(fullBody);
         
