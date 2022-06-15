@@ -21,19 +21,20 @@ client.on('ready', async() => {
     // Do module things
     console.log("Enabling modules");
     const moduleFiles = readdirSync("src/modules");
-    moduleFiles.forEach(f => {
+    moduleFiles.forEach((f, index) => {
         if (!f.endsWith(".ts")) return; // Ignore non-ts files
         import(`./modules/${f}`).then(M => {
             const module = new M.default();
             if (!(module instanceof Module)) throw new Error(`Module ${f} does not extend "Module"`);
             modules.set(module.name, module);
             module.initialise(client);
+            if(index === moduleFiles.length - 1) { // Run ready events
+                modules.forEach((value, key) => {
+                    value.onReady(modules);
+                })
+            }
         });
     });
-
-    modules.forEach(function(val, key) {
-        val.onReady(modules);
-    })
 });
 
 
