@@ -8,8 +8,9 @@ export default class CommandManager extends Module {
     commands = new Collection<string, CommandOptions>();
 
     onEnable() {
-        this.registerCommand({ name: "ping", allowedRoles: ["985471668447219722"], executor: (message, args) => {
-            message.reply("h")
+        this.logger.info("Enabled");
+        this.registerCommand({ name: "ping", executor: (message, args) => {
+            
         }});
     }
 
@@ -41,7 +42,12 @@ export default class CommandManager extends Module {
     }
 
     executeCommand(command: CommandOptions, message: Message, args: string[]) {
-        command.executor(message, args);
+        try {
+            command.executor(message, args);
+        } catch (e: any) {
+            this.logger.error(e.toString());
+            message.channel.send(`An error occurred. \`\`\`\ ${e.toString()} \`\`\``)
+        }
     }
 
     registerCommand(options: CommandOptions) {
