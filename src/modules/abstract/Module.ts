@@ -20,7 +20,7 @@ export default class Module {
 
     onEnable(): void { }
 
-    onReady(modules: Collection<string, Module>): void { } // Runs when all modules are loaded
+    onModulesLoaded(modules: Collection<string, Module>): void { } // Runs when all modules are loaded
 
     onMessage(message: Message): void { }
 }
