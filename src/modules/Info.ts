@@ -1,9 +1,9 @@
 import { Collection, MessageEmbed } from "discord.js";
+import { CallbackError } from "mongoose";
+import { request } from 'undici';
 import Town from "../schema/Town";
 import Module from "./abstract/Module";
 import CommandManager from "./CommandManager";
-import { request } from 'undici';
-import { CallbackError } from "mongoose";
 
 
 export default class Info extends Module {
