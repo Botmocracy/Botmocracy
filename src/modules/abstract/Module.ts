@@ -10,7 +10,6 @@ export default class Module {
     initialise(client: Client): void {
         this.client = client;
         this.logger = new Logger(this.name);
-        this.client.on("messageCreate", msg => this.onMessage(msg));
         this.client.on("interactionCreate", async i => {
             if (!i.isCommand()) return;
             const command = this.slashCommands[i.commandName]
@@ -43,8 +42,6 @@ export default class Module {
     onEnable(): void { }
 
     onModulesLoaded(modules: Collection<string, Module>): void { } // Runs when all modules are loaded
-
-    onMessage(message: Message): void { }
     
     slashCommands: {[key: string]: CommandOptions} = {}
 }
