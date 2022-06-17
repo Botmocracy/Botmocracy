@@ -1,6 +1,6 @@
-import Module from "./abstract/Module";
 import { Collection, Message } from "discord.js";
 import CommandOptions from "../util/CommandOptions";
+import Module from "./abstract/Module";
 
 export default class CommandManager extends Module {
     name = "CommandManager";

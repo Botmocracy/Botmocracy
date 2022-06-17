@@ -1,11 +1,11 @@
-import { Intents, Client, Collection } from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { REST } from "@discordjs/rest";
+import { Routes } from "discord-api-types/v10";
+import { Client, Collection, Intents } from "discord.js";
 import * as dotenv from "dotenv";
 import { readdirSync } from "fs";
-import Module from "./modules/abstract/Module";
 import * as mongoose from 'mongoose';
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { Routes } from "discord-api-types/v10"
-import { REST } from "@discordjs/rest"
+import Module from "./modules/abstract/Module";
 
 dotenv.config();
 
