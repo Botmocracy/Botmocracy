@@ -1,13 +1,12 @@
-import { Collection, MessageEmbed } from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { Collection, CommandInteraction, Interaction, MessageEmbed } from "discord.js";
+import { CallbackError } from "mongoose";
+import { request } from 'undici';
 import Town from "../schema/Town";
 import Module from "./abstract/Module";
-import CommandManager from "./CommandManager";
-import { request } from 'undici';
-import { CallbackError } from "mongoose";
 
 
 export default class Info extends Module {
-    commandManager: CommandManager|null = null;
     name = "Info";
     
     onEnable(): void {
@@ -33,44 +32,54 @@ export default class Info extends Module {
 
         return undefined;
     }
-
-    onModulesLoaded(modules: Collection<string, Module>): void {
-        const self = this;
-
-        this.commandManager = (modules.get("CommandManager") as CommandManager);  
-        this.commandManager.registerCommand({name: "gettown", executor(message, args) {
-            if(args.length < 1) {
-                message.channel.send("Syntax: `gettown <name>`")
-                return;
+    slashCommands = {
+        gettown: {
+            cmdBuilder: new SlashCommandBuilder()
+                .setName("gettown")
+                .setDescription("Get info about a town")
+                .addStringOption(option =>
+                    option.setName("name")
+                        .setDescription("Name of the town")
+                        .setRequired(true)
+                ),
+            executor: async (i: CommandInteraction) => {
+                await i.deferReply();
+                Town.findOne({name: i.options.getString("name")}, async (err: any, res: any) => {
+                    if(!res || err) {
+                        await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
+                        return;
+                    }
+                    const name = res['name'];
+                    const mayor = res['mayor'];
+                    const depMayor = res['depMayor'];
+                    const coords = res['coords'];
+    
+                    const embed = new MessageEmbed()
+                        .setTitle(name)
+                        .addField("Mayor", mayor)
+                        .addField("Deputy Mayor", depMayor)
+                        .addField("Coords", coords)
+                        .setColor("BLURPLE");
+                    
+                    await i.editReply({embeds: [embed]});
+                })
             }
-            Town.findOne({name: args.shift()}, (err: any, res: any) => {
-                if(!res || err) {
-                    message.channel.send("Invalid town");
-                    return;
-                }
-                const name = res['name'];
-                const mayor = res['mayor'];
-                const depMayor = res['depMayor'];
-                const coords = res['coords'];
-
-                const embed = new MessageEmbed()
-                    .setTitle(name)
-                    .addField("Mayor", mayor)
-                    .addField("Deputy Mayor", depMayor)
-                    .addField("Coords", coords)
-                    .setColor("BLURPLE");
-                
-                message.channel.send({embeds: [embed]});
-            })
-        }});
-
-        this.commandManager.registerCommand({name: "addtown", executor(message, args) {
-            if(args.length < 1) {
-                message.channel.send("Syntax: `addtown <name`");
-            }
-            self.getTownByName(args[0]).then(result => {
+        },
+        addtown: {
+            cmdBuilder: new SlashCommandBuilder()
+                .setName("addtown")
+                .setDescription("Add a town")
+                .addStringOption(option =>
+                    option.setName("name")
+                    .setDescription("Name of the town")
+                    .setRequired(true)
+                ),
+            executor: async (i: CommandInteraction) => {
+                await i.deferReply();
+                let result = await this.getTownByName(i.options.getString("name") ?? "")
                 if(!result) {
-                    message.channel.send("Invalid town");
+                    await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
+                    return;
                 }
                 result = (result as {[key: string]: any})
                 const townName = result["Town Name"];
@@ -93,10 +102,9 @@ export default class Info extends Module {
 
                 town.save((err: CallbackError) => {if (err) throw err;});
 
-                message.channel.send("Done.");
-            })
+                await i.editReply(`Added town \`${i.options.getString("name")}\``);
+            }
+        }
 
-        }})
     }
-
 }
