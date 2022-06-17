@@ -4,11 +4,9 @@ import { CallbackError } from "mongoose";
 import { request } from 'undici';
 import Town from "../schema/Town";
 import Module from "./abstract/Module";
-import CommandManager from "./CommandManager";
 
 
 export default class Info extends Module {
-    commandManager: CommandManager|null = null;
     name = "Info";
     
     onEnable(): void {
@@ -33,71 +31,6 @@ export default class Info extends Module {
         }
 
         return undefined;
-    }
-
-    onModulesLoaded(modules: Collection<string, Module>): void {
-        const self = this;
-
-        this.commandManager = (modules.get("CommandManager") as CommandManager);  
-        /*this.commandManager.registerCommand({name: "gettown", executor(message, args) {
-            if(args.length < 1) {
-                message.channel.send("Syntax: `gettown <name>`")
-                return;
-            }
-            Town.findOne({name: args.shift()}, (err: any, res: any) => {
-                if(!res || err) {
-                    message.channel.send("Invalid town");
-                    return;
-                }
-                const name = res['name'];
-                const mayor = res['mayor'];
-                const depMayor = res['depMayor'];
-                const coords = res['coords'];
-
-                const embed = new MessageEmbed()
-                    .setTitle(name)
-                    .addField("Mayor", mayor)
-                    .addField("Deputy Mayor", depMayor)
-                    .addField("Coords", coords)
-                    .setColor("BLURPLE");
-                
-                message.channel.send({embeds: [embed]});
-            })
-        }});*/
-
-        /*this.commandManager.registerCommand({name: "addtown", executor(message, args) {
-            if(args.length < 1) {
-                message.channel.send("Syntax: `addtown <name`");
-            }
-            self.getTownByName(args[0]).then(result => {
-                if(!result) {
-                    message.channel.send("Invalid town");
-                }
-                result = (result as {[key: string]: any})
-                const townName = result["Town Name"];
-
-                const town = new Town({
-                    name: result["Town Name"],
-                    mayor: result['Mayor'], 
-                    depMayor: result['Deputy Mayor'], 
-                    coords: `${result['X']} ${result['Y']} ${result['Z']}`, 
-                    rank: result['Town Rank']
-                })
-
-                Town.findOne({name: townName}, (err: CallbackError, res: any) => {
-                    if(!err || res) {
-                        Town.deleteOne({name: townName}, (err: CallbackError, res: any) => {
-                            if(err) throw err;
-                        })
-                    }
-                })
-
-                town.save((err: CallbackError) => {if (err) throw err;});
-
-                message.channel.send("Done.");
-            })
-
-        }})*/
     }
     slashCommands = {
         gettown: {
