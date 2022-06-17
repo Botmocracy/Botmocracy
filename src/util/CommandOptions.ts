@@ -1,8 +1,9 @@
-import { Message, PermissionResolvable, RoleResolvable } from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { CommandInteraction, PermissionResolvable, RoleResolvable } from "discord.js";
 
 export default interface Command {
-    name: string,
-    executor: (message: Message, args: string[]) => void,
+    cmdBuilder: Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">,
+    executor: (i: CommandInteraction) => Promise<void>,
     allowedPermissions?: PermissionResolvable[],
     allowedRoles?: RoleResolvable[]
 }

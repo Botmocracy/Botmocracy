@@ -11,7 +11,7 @@ export default class CommandManager extends Module {
         this.logger.info("Enabled");
     }
 
-    onMessage(message: Message) {
+    /*onMessage(message: Message) {
         if (!message.content.startsWith(this.prefix)) return;
 
         const args = message.content.substring(this.prefix.length).split(" ");
@@ -36,9 +36,9 @@ export default class CommandManager extends Module {
             }
 
         message.reply("You do not have permission to execute this command.");
-    }
+    }*/
 
-    executeCommand(command: CommandOptions, message: Message, args: string[]) {
+    /*executeCommand(command: CommandOptions, message: Message, args: string[]) {
         try {
             command.executor(message, args);
         } catch (e: any) {
@@ -49,5 +49,9 @@ export default class CommandManager extends Module {
 
     registerCommand(options: CommandOptions) {
         this.commands.set(options.name, options);
+    }*/
+    
+    slashCommands = {
+
     }
 }
