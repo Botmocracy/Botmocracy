@@ -1,10 +1,10 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { Client, Collection, Intents } from "discord.js";
 import * as dotenv from "dotenv";
 import { readdirSync } from "fs";
 import * as mongoose from 'mongoose';
+import { Dispatcher } from "undici";
 import Module from "./modules/abstract/Module";
 
 dotenv.config();
@@ -47,6 +47,5 @@ client.on('ready', async () => {
     );
     console.log(`${slashCommands.length} application commands reloaded`)
 });
-
 
 client.login(process.env.TOKEN);
