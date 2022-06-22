@@ -34,7 +34,7 @@ export default class Auth extends Module {
         verify: {
             cmdBuilder: new SlashCommandBuilder()
                 .setName("verify")
-                .setDescription("Verifys you"),
+                .setDescription("Verifies you"),
             
             executor: async (i: CommandInteraction) => {
                 if(!i.guild) {
