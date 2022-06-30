@@ -57,7 +57,7 @@ export default class Auth extends Module {
                 }
 
                 const data = req.data;
-                const uuid = data['minecraft']['identifier'];
+                const uuid = data.minecraft.identifier;
                 const members = await this.getMembers();
                 const name = await this.getName(uuid);
                 
