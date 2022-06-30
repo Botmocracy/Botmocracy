@@ -25,7 +25,7 @@ export const modules = new Collection<string, Module>();
 
 client.on('ready', async () => {
     // Do module things
-    console.log("Enabling modules");
+    logger.info("Enabling modules");
     const moduleFiles = readdirSync("src/modules");
 
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN!);
