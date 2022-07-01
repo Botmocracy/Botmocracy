@@ -59,7 +59,7 @@ export default class Election extends Module {
 
     confirmCandidacy(i: ButtonInteraction) {
         let userIds = i.customId.split("-");
-        userIds.pop() // Remove "confirmcandidacy"
+        userIds.shift() // Remove "confirmcandidacy"
 
         // Make sure there's no sorcery going on
         if (i.user.id != userIds[0] || !i.guild || !i.guild.members.cache.has(userIds[1])) return i.reply({ content: "wtf is happening", ephemeral: true });
