@@ -23,7 +23,7 @@ const modules = new Collection<string, Module>();
 
 export const config = JSON.parse(readFileSync("./config.json").toString());
 
-client.on('ready', async () => {
+client.on('ready', async (client) => {
     // Do module things
     logger.info("Enabling modules");
     const moduleFiles = readdirSync("src/modules");

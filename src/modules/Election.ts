@@ -42,6 +42,7 @@ export default class Election extends Module {
                 if (!runningMate) return i.reply({ content: "That person is not a member of this server.", ephemeral: true });
                 if (!runningMate.roles.cache.has(config.citizen_role)) return i.reply({ content: "That person is not a citizen.", ephemeral: true });
                 if (runningMate.id == i.user.id) return i.reply({ content: "Really? You want to run with yourself?", ephemeral: true });
+                if (runningMate.id == this.client?.user.id) return i.reply({ content: "I don't want to run with you, I'm a bot!", ephemeral: true});
 
                 const row = new MessageActionRow()
                     .addComponents(
