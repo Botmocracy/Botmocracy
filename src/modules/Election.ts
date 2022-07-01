@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { ButtonInteraction, CommandInteraction, GuildMember, MessageActionRow, MessageButton } from "discord.js";
+import { ButtonInteraction, CommandInteraction, GuildMember, MessageActionRow, MessageButton, TextChannel } from "discord.js";
 import { config } from "..";
 import ElectionInfo from "../schema/ElectionInfo";
 import Module from "./abstract/Module";
@@ -71,8 +71,10 @@ export default class Election extends Module {
             if (err) return i.reply({ content: "Error retrieving election info: " + err.toString(), ephemeral: true });
             console.log(data);
 
-            const updatesChannel = this.client?.channels.cache.get(config.election_updates_channel);
-            if (!updatesChannel) return;
+            const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
+            if (!updatesChannel) return console.log(":thinking:");
+
+            updatesChannel.send("uwu");
         })
     }
 }

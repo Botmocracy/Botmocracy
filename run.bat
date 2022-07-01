@@ -1,2 +1,2 @@
 @echo off
-npx ts-node src/index.ts
+ts-node src/index.ts
