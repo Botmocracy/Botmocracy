@@ -71,8 +71,8 @@ export default class ElectionScheduler extends Module {
         newInfo.save();
     }
 
-    beginRegistration() {
-        ElectionCandidate.deleteMany();
+    async beginRegistration() {
+        await ElectionCandidate.deleteMany().exec();
         this.updateElectionPhase(ElectionPhase.REGISTRATION);
         this.updatesChannel!.send([
             `<@&${config.citizen_role}> **Presidential Election registration is now open!**`,
