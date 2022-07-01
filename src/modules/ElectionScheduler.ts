@@ -4,6 +4,7 @@ import ElectionInfo from "../schema/ElectionInfo";
 import Module from "./abstract/Module";
 import timestring = require("timestring"); // Why can't they just do this like everyone else
 import { ElectionPhase } from "../util/ElectionPhase";
+import ElectionCandidate from "../schema/ElectionCandidate";
 
 export default class ElectionScheduler extends Module {
     name = "ElectionScheduler";
@@ -23,7 +24,7 @@ export default class ElectionScheduler extends Module {
             currentPhase: ElectionPhase.INACTIVE
         });
 
-        await ElectionInfo.deleteMany({}).exec();
+        await ElectionInfo.deleteMany().exec();
         await electionInfo.save();
 
         const info = await ElectionInfo.findOne().exec();
@@ -71,6 +72,7 @@ export default class ElectionScheduler extends Module {
     }
 
     beginRegistration() {
+        ElectionCandidate.deleteMany();
         this.updateElectionPhase(ElectionPhase.REGISTRATION);
         this.updatesChannel!.send([
             `<@&${config.citizen_role}> **Presidential Election registration is now open!**`,
