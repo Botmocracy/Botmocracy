@@ -8,6 +8,8 @@ import Module from "./modules/abstract/Module";
 import Logger from "./util/Logger";
 import { readFileSync } from "fs";
 
+export const config = JSON.parse(readFileSync("./config.json").toString());
+
 dotenv.config();
 
 mongoose.connect((process.env.MONGO_STRING as string));
@@ -17,11 +19,9 @@ intents.add(Intents.FLAGS.GUILD_MESSAGES);
 intents.add(Intents.FLAGS.GUILDS);
 intents.add(Intents.FLAGS.GUILD_MEMBERS);
 
-const client = new Client({ intents: intents });
+const client = new Client({ intents: intents, allowedMentions: { parse: config.allowed_mentions } });
 const logger = new Logger("Index");
 const modules = new Collection<string, Module>();
-
-export const config = JSON.parse(readFileSync("./config.json").toString());
 
 client.on('ready', async (client) => {
     // Do module things
