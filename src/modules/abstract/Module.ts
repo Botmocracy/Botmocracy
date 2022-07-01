@@ -5,9 +5,9 @@ export default class Module {
     name = "";
 
     logger : Logger = new Logger("");
-    client: Client | null = null; // |null is required bcs of typescript
+    client: Client<true> | null = null; // |null is required bcs of typescript
 
-    initialise(client: Client): void {
+    initialise(client: Client<true>): void {
         this.client = client;
         this.logger = new Logger(this.name);
         this.client.on("interactionCreate", async i => {

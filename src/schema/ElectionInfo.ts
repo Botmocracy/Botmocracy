@@ -3,7 +3,7 @@ import { ElectionPhase } from "../util/ElectionPhase";
 
 const electionInfoSchema = new Schema({
     next: Number,
-    currentPhase: ElectionPhase,
+    currentPhase: {type: String, enum: ElectionPhase},
     candidates: Array<Array<String>>
 });
 
