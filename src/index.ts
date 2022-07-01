@@ -4,9 +4,9 @@ import { Client, Collection, Intents } from "discord.js";
 import * as dotenv from "dotenv";
 import { readdirSync } from "fs";
 import * as mongoose from 'mongoose';
-import { Dispatcher } from "undici";
 import Module from "./modules/abstract/Module";
 import Logger from "./util/Logger";
+import { readFileSync } from "fs";
 
 dotenv.config();
 
@@ -18,10 +18,10 @@ intents.add(Intents.FLAGS.GUILDS);
 intents.add(Intents.FLAGS.GUILD_MEMBERS);
 
 const client = new Client({ intents: intents });
-
 const logger = new Logger("Index");
+const modules = new Collection<string, Module>();
 
-export const modules = new Collection<string, Module>();
+export const config = JSON.parse(readFileSync("./config.json").toString());
 
 client.on('ready', async () => {
     // Do module things
