@@ -105,6 +105,26 @@ export default class ElectionRegistration extends Module {
                     ephemeral: true
                 });
             }
+        },
+
+        listrunning: {
+            cmdBuilder: new SlashCommandBuilder()
+                .setName("listrunning")
+                .setDescription("List who's running in the Presidential election"),
+
+            executor: async (i: CommandInteraction) => {
+                const candidates = await ElectionCandidate.find().exec();
+
+                if (!candidates) return i.reply({ content: "Unable to fetch the candidates list. Please try again later.", ephemeral: true });
+
+                let outputMessage = "**Candidates running in this election:**";
+
+                for (const candidate of candidates) {
+                    outputMessage += `\n<@${candidate.discordId}> for President; <@${candidate.runningMateDiscordId}> for Vice President.`;
+                }
+
+                i.reply({ content: outputMessage, ephemeral: true });
+            }
         }
     }
 
