@@ -4,7 +4,6 @@ import { CallbackError } from "mongoose";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
-import { ElectionPhase } from "../util/ElectionPhase";
 import Module from "./abstract/Module";
 
 export default class ElectionRegistration extends Module {
@@ -55,7 +54,7 @@ export default class ElectionRegistration extends Module {
                     .addComponents(
                         new MessageButton()
                             .setCustomId(`confirmcandidacy-${i.user.id}-${runningMate.id}`)
-                            .setStyle("PRIMARY")
+                            .setStyle("SUCCESS")
                             .setLabel("Confirm")
                     );
 

@@ -1,4 +1,4 @@
-import { TextChannel } from "discord.js";
+import { MessageActionRow, MessageButton, TextChannel } from "discord.js";
 import { config } from "..";
 import ElectionInfo from "../schema/ElectionInfo";
 import Module from "./abstract/Module";
@@ -88,11 +88,18 @@ export default class ElectionScheduler extends Module {
 
     beginVoting() {
         this.updateElectionPhase(ElectionPhase.VOTING);
-        this.updatesChannel!.send([
+        const row = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId("vote")
+                    .setLabel("Vote")
+                    .setStyle("PRIMARY")
+            );
+        this.updatesChannel!.send({ content: [
             `<@&${config.citizen_role}> **Presidential Election voting is now open!**`,
-            `Run \`/vote\` before ${this.timestamp(this.votingEnd!)} to have your say in choosing the next President!`,
+            `Press the button below to vote before ${this.timestamp(this.votingEnd!)} to have your say in choosing the next President!`,
             `You can use \`/listrunning\` at any time to see who has entered.`
-        ].join("\n"));
+        ].join("\n"), components: [row] });
     }
 
     endVoting() {
