@@ -2,7 +2,7 @@ import { TextChannel } from "discord.js";
 import { config } from "..";
 import ElectionInfo from "../schema/ElectionInfo";
 import Module from "./abstract/Module";
-import timestring = require("timestring"); // Why can't they just do this like everyone else
+import * as timestring from 'timestring'; // Why can't they just do this like everyone else
 import { ElectionPhase } from "../util/ElectionPhase";
 import ElectionCandidate from "../schema/ElectionCandidate";
 
