@@ -80,7 +80,9 @@ export default class ElectionScheduler extends Module {
             `Important times to take note of:`,
             `${this.timestamp(this.votingBegin!)} - Registration ends and voting begins.`,
             `${this.timestamp(this.votingEnd!)} - Voting ends and counting begins.`,
-            `${this.timestamp(this.powerTransition!)} - Transition of power.`
+            `${this.timestamp(this.powerTransition!)} - Transition of power.`,
+            ``,
+            `You can use \`/listrunning\` at any time to see who has entered.`
         ].join("\n"));
     }
 
@@ -88,7 +90,8 @@ export default class ElectionScheduler extends Module {
         this.updateElectionPhase(ElectionPhase.VOTING);
         this.updatesChannel!.send([
             `<@&${config.citizen_role}> **Presidential Election voting is now open!**`,
-            `<insert stuff here>`
+            `Run \`/vote\` before ${this.timestamp(this.votingEnd!)} to have your say in choosing the next President!`,
+            `You can use \`/listrunning\` at any time to see who has entered.`
         ].join("\n"));
     }
 
