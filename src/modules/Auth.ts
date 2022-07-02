@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction, Interaction, Role } from "discord.js";
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import Module from "./abstract/Module";
 
 
@@ -48,14 +48,15 @@ export default class Auth extends Module {
                     i.reply({ content: "You're already verified.", ephemeral: true });
                     return;
                 }
+                let req;
 
-                const req = await axios.get(`https://minecraftauth.me/api/lookup?discord=${i.user.id}`);
-
-                if (req.status == 404) {
+                try {
+                    req = await axios.get(`https://minecraftauth.me/api/lookup?discord=${i.user.id}`);
+                } catch (error) {
                     i.reply({ content: "You need to verify with https://minecraftauth.me first." });
                     return;
                 }
-
+                
                 const data = req.data;
                 const uuid = data.minecraft.identifier;
                 const members = await this.getMembers();
