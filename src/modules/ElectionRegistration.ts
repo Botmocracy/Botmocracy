@@ -23,110 +23,6 @@ export default class ElectionRegistration extends Module {
         });
     }
 
-    slashCommands = {
-        enterelection: {
-            cmdBuilder: new SlashCommandBuilder()
-                .setName("enterelection")
-                .setDescription("Enter the Presidential election")
-                .addUserOption(
-                    o => o
-                        .setName("runningmate")
-                        .setDescription("The person who will be vice president if you are elected")
-                        .setRequired(true)
-                ),
-
-            allowedRoles: [config.citizen_role],
-
-            executor: async (i: CommandInteraction) => {
-                if (!i.guild) {
-                    i.reply({ content: "You can't use this in a DM", ephemeral: true });
-                    return;
-                }
-
-                const runningMate = i.options.getMember("runningmate") as GuildMember;
-
-                if (!runningMate) return i.reply({ content: "That person is not a member of this server.", ephemeral: true });
-                if (!runningMate.roles.cache.has(config.citizen_role)) return i.reply({ content: "That person is not a citizen.", ephemeral: true });
-                if (runningMate.id == i.user.id) return i.reply({ content: "Really? You want to run with yourself?", ephemeral: true });
-                if (runningMate.id == this.client?.user.id) return i.reply({ content: "I don't want to run with you, I'm a bot!", ephemeral: true });
-
-                const row = new MessageActionRow()
-                    .addComponents(
-                        new MessageButton()
-                            .setCustomId(`confirmcandidacy-${i.user.id}-${runningMate.id}`)
-                            .setStyle("SUCCESS")
-                            .setLabel("Confirm")
-                    );
-
-                i.reply({
-                    content: `**Are you sure?**\n\nBy clicking the \`Confirm\` button, you agree to enter yourself into the election and that your running-mate ${runningMate} is willing to enter also.`,
-                    components: [row],
-                    ephemeral: true
-                });
-            }
-        },
-        withdrawfromelection: {
-            cmdBuilder: new SlashCommandBuilder()
-                .setName("withdrawfromelection")
-                .setDescription("Withdraw yourself from election candidacy.")
-                .addUserOption(
-                    o => o
-                        .setName("runningwith")
-                        .setDescription("The person you are running with")
-                        .setRequired(true)
-                ),
-
-            allowedRoles: [config.citizen_role],
-
-            executor: async (i: CommandInteraction) => {
-                const electionInfo = await ElectionInfo.findOne().exec();
-                if (electionInfo?.currentPhase == 0) return i.reply({ content: "There isn't currently an election running.", ephemeral: true });
-
-                const runningWith = i.options.getUser("runningwith");
-                if (!runningWith) return i.reply({ content: "That's not a valid Discord user.", ephemeral: true });
-
-                const runningAsPrimary = await ElectionCandidate.findOne({ discordId: i.user.id, runningMateDiscordId: runningWith.id });
-                const runningAsSecondary = await ElectionCandidate.findOne({ discordId: runningWith.id, runningMateDiscordId: i.user.id });
-
-                if (!runningAsPrimary && !runningAsSecondary) return i.reply({ content: "You don't seem to be running with that person.", ephemeral: true });
-
-                const row = new MessageActionRow()
-                    .addComponents(
-                        new MessageButton()
-                            .setCustomId(`confirmwithdrawal-${i.user.id}-${runningWith.id}`)
-                            .setStyle("DANGER")
-                            .setLabel("Confirm")
-                    );
-
-                i.reply({
-                    content: `**Are you sure?**\n\If you click the \`Confirm\` button, this combination will be removed from the election`,
-                    components: [row],
-                    ephemeral: true
-                });
-            }
-        },
-
-        listrunning: {
-            cmdBuilder: new SlashCommandBuilder()
-                .setName("listrunning")
-                .setDescription("List who's running in the Presidential election"),
-
-            executor: async (i: CommandInteraction) => {
-                const candidates = await ElectionCandidate.find().exec();
-
-                if (!candidates) return i.reply({ content: "Unable to fetch the candidates list. Please try again later.", ephemeral: true });
-
-                let outputMessage = "**Candidates running in this election:**";
-
-                for (const candidate of candidates) {
-                    outputMessage += `\n<@${candidate.discordId}> for President; <@${candidate.runningMateDiscordId}> for Vice President.`;
-                }
-
-                i.reply({ content: outputMessage, ephemeral: true });
-            }
-        }
-    }
-
     confirmCandidacy(i: ButtonInteraction) {
         let userIds = i.customId.split("-");
         userIds.shift() // Remove "confirmcandidacy"
@@ -186,5 +82,114 @@ export default class ElectionRegistration extends Module {
         if (!updatesChannel) return;
 
         updatesChannel.send(`<@${userIds[0]}> has withdrawn <@${userIds[0]}> and <@${userIds[1]}> from the election.`);
+    }
+
+    slashCommands = {
+        election: {
+            cmdBuilder: new SlashCommandBuilder()
+            .setName("election")
+            .setDescription("Enter, withdraw or list candidates in the Presidential elections")
+            .addSubcommand(s => s
+                .setName("enter")
+                .setDescription("Enter the Presidential election")
+                .addUserOption(
+                    o => o
+                        .setName("runningmate")
+                        .setDescription("The person who will be vice president if you are elected")
+                        .setRequired(true)
+                ))
+            .addSubcommand(s => s
+                .setName("withdraw")
+                .setDescription("Withdraw yourself from election candidacy.")
+                .addUserOption(
+                    o => o
+                        .setName("runningwith")
+                        .setDescription("The person you are running with")
+                        .setRequired(true)
+                ))
+            .addSubcommand(s => s
+                .setName("listrunning")
+                .setDescription("List who's running in the Presidential election")),
+            subcommands: {
+                enter: {
+                    allowedRoles: [config.citizen_role],
+                    executor: async (i: CommandInteraction) => {
+                        if (!i.guild) {
+                            i.reply({ content: "You can't use this in a DM", ephemeral: true });
+                            return;
+                        }
+        
+                        const runningMate = i.options.getMember("runningmate") as GuildMember;
+        
+                        if (!runningMate)
+                            return i.reply({ content: "That person is not a member of this server.", ephemeral: true });
+                        if (!runningMate.roles.cache.has(config.citizen_role))
+                            return i.reply({ content: "That person is not a citizen.", ephemeral: true });
+                        if (runningMate.id == i.user.id)
+                            return i.reply({ content: "Really? You want to run with yourself?", ephemeral: true });
+                        if (runningMate.id == this.client?.user.id)
+                            return i.reply({ content: "I don't want to run with you, I'm a bot!", ephemeral: true });
+        
+                        const row = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId(`confirmcandidacy-${i.user.id}-${runningMate.id}`)
+                                    .setStyle("SUCCESS")
+                                    .setLabel("Confirm")
+                            );
+        
+                        i.reply({
+                            content: `**Are you sure?**\n\nBy clicking the \`Confirm\` button, you agree to enter yourself into the election and that your running-mate ${runningMate} is willing to enter also.`,
+                            components: [row],
+                            ephemeral: true
+                        });
+                    }
+                },
+                withdraw: {
+                    allowedRoles: [config.citizen_role],
+                    executor: async (i: CommandInteraction) => {
+                        const electionInfo = await ElectionInfo.findOne().exec();
+                        if (electionInfo?.currentPhase == 0) return i.reply({ content: "There isn't currently an election running.", ephemeral: true });
+        
+                        const runningWith = i.options.getUser("runningwith");
+                        if (!runningWith) return i.reply({ content: "That's not a valid Discord user.", ephemeral: true });
+        
+                        const runningAsPrimary = await ElectionCandidate.findOne({ discordId: i.user.id, runningMateDiscordId: runningWith.id });
+                        const runningAsSecondary = await ElectionCandidate.findOne({ discordId: runningWith.id, runningMateDiscordId: i.user.id });
+        
+                        if (!runningAsPrimary && !runningAsSecondary) return i.reply({ content: "You don't seem to be running with that person.", ephemeral: true });
+        
+                        const row = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId(`confirmwithdrawal-${i.user.id}-${runningWith.id}`)
+                                    .setStyle("DANGER")
+                                    .setLabel("Confirm")
+                            );
+        
+                        i.reply({
+                            content: `**Are you sure?**\n\If you click the \`Confirm\` button, this combination will be removed from the election`,
+                            components: [row],
+                            ephemeral: true
+                        });
+                    }
+                },
+                listrunning: {
+                    executor: async (i: CommandInteraction) => {
+                        const candidates = await ElectionCandidate.find().exec();
+        
+                        if (!candidates) return i.reply({ content: "Unable to fetch the candidates list. Please try again later.", ephemeral: true });
+        
+                        let outputMessage = "**Candidates running in this election:**";
+        
+                        for (const candidate of candidates) {
+                            outputMessage += `\n<@${candidate.discordId}> for President; <@${candidate.runningMateDiscordId}> for Vice President.`;
+                        }
+        
+                        i.reply({ content: outputMessage, ephemeral: true });
+                    }
+                }
+            }
+        }
     }
 }
