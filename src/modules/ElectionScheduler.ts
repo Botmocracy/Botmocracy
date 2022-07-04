@@ -33,14 +33,14 @@ export default class ElectionScheduler extends Module {
 
         const currentPhase: number = info.currentPhase;
         this.registrationBegin = info.processStartTime.getTime();
-        this.votingBegin = this.registrationBegin + timestring(config.election_registration_period, "ms");
+        this.votingBegin = this.registrationBegin!! + timestring(config.election_registration_period, "ms");
         this.votingEnd = this.votingBegin + timestring(config.election_vote_period, "ms");
         this.powerTransition = this.votingEnd + timestring(config.power_transition_period);
         
         switch (currentPhase) {
             case 0:
-                if (Date.now() > this.registrationBegin) this.beginRegistration();
-                else setTimeout(() => this.beginRegistration(), this.registrationBegin - Date.now());
+                if (Date.now() > this.registrationBegin!!) this.beginRegistration();
+                else setTimeout(() => this.beginRegistration(), this.registrationBegin!! - Date.now());
             case 1:
                 if (Date.now() > this.votingBegin) this.beginVoting();
                 else setTimeout(() => this.beginVoting(), this.votingBegin - Date.now());

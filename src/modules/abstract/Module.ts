@@ -1,4 +1,4 @@
-import { Client, Collection, GuildMemberRoleManager, Message } from "discord.js";
+import { Client, Collection, GuildMemberRoleManager } from "discord.js";
 import CommandOptions from "../../util/CommandOptions";
 import Logger from "../../util/Logger";
 export default class Module {
