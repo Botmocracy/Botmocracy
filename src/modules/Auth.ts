@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, Interaction, Role } from "discord.js";
-import axios, { AxiosError } from 'axios';
+import { CommandInteraction, Role } from "discord.js";
+import axios from 'axios';
 import Module from "./abstract/Module";
 
 

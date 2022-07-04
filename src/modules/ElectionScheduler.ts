@@ -33,14 +33,14 @@ export default class ElectionScheduler extends Module {
 
         const currentPhase: number = info.currentPhase;
         this.registrationBegin = info.processStartTime.getTime();
-        this.votingBegin = this.registrationBegin + timestring(config.election_registration_period, "ms");
+        this.votingBegin = this.registrationBegin!! + timestring(config.election_registration_period, "ms");
         this.votingEnd = this.votingBegin + timestring(config.election_vote_period, "ms");
         this.powerTransition = this.votingEnd + timestring(config.power_transition_period);
         
         switch (currentPhase) {
             case 0:
-                if (Date.now() > this.registrationBegin) this.beginRegistration();
-                else setTimeout(() => this.beginRegistration(), this.registrationBegin - Date.now());
+                if (Date.now() > this.registrationBegin!!) this.beginRegistration();
+                else setTimeout(() => this.beginRegistration(), this.registrationBegin!! - Date.now());
             case 1:
                 if (Date.now() > this.votingBegin) this.beginVoting();
                 else setTimeout(() => this.beginVoting(), this.votingBegin - Date.now());
@@ -76,13 +76,13 @@ export default class ElectionScheduler extends Module {
         this.updateElectionPhase(ElectionPhase.REGISTRATION);
         this.updatesChannel!.send([
             `<@&${config.citizen_role}> **Presidential Election registration is now open!**`,
-            `Any citizen may run. To register, run \`/enterelection\` and specify your running-mate, who will be vice president if elected.`,
+            `Any citizen may run. To register, run \`/election enter\` and specify your running-mate, who will be vice president if elected.`,
             `Important times to take note of:`,
             `${this.timestamp(this.votingBegin!)} - Registration ends and voting begins.`,
             `${this.timestamp(this.votingEnd!)} - Voting ends and counting begins.`,
             `${this.timestamp(this.powerTransition!)} - Transition of power.`,
             ``,
-            `You can use \`/listrunning\` at any time to see who has entered.`
+            `You can use \`/election listrunning\` at any time to see who has entered.`
         ].join("\n"));
     }
 
@@ -98,7 +98,7 @@ export default class ElectionScheduler extends Module {
         this.updatesChannel!.send({ content: [
             `<@&${config.citizen_role}> **Presidential Election voting is now open!**`,
             `Press the button below to vote before ${this.timestamp(this.votingEnd!)} to have your say in choosing the next President!`,
-            `You can use \`/listrunning\` at any time to see who has entered.`
+            `You can use \`/election listrunning\` at any time to see who has entered.`
         ].join("\n"), components: [row] });
     }
 
