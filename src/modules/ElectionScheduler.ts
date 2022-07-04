@@ -20,7 +20,7 @@ export default class ElectionScheduler extends Module {
         this.updatesChannel = this.client?.channels.cache.get(config.election_updates_channel) as TextChannel;
 
         const electionInfo = new ElectionInfo({
-            processStartTime: Date.now() + 10000,
+            processStartTime: Date.now() + 3000,
             currentPhase: ElectionPhase.INACTIVE
         });
 
@@ -36,7 +36,7 @@ export default class ElectionScheduler extends Module {
         this.votingBegin = this.registrationBegin!! + timestring(config.election_registration_period, "ms");
         this.votingEnd = this.votingBegin + timestring(config.election_vote_period, "ms");
         this.powerTransition = this.votingEnd + timestring(config.power_transition_period);
-        
+
         switch (currentPhase) {
             case 0:
                 if (Date.now() > this.registrationBegin!!) this.beginRegistration();
@@ -62,7 +62,7 @@ export default class ElectionScheduler extends Module {
         if (!currentInfo) throw new Error("Unable to update election phase: Info fetch failed");
 
         await currentInfo.remove();
-        
+
         const newInfo = new ElectionInfo({
             currentPhase: phase,
             processStartTime: currentInfo.processStartTime
@@ -72,7 +72,6 @@ export default class ElectionScheduler extends Module {
     }
 
     async beginRegistration() {
-        await ElectionCandidate.deleteMany().exec();
         this.updateElectionPhase(ElectionPhase.REGISTRATION);
         this.updatesChannel!.send([
             `<@&${config.citizen_role}> **Presidential Election registration is now open!**`,
@@ -91,22 +90,24 @@ export default class ElectionScheduler extends Module {
         const row = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setCustomId("vote")
+                    .setCustomId("electionvote")
                     .setLabel("Vote")
                     .setStyle("PRIMARY")
             );
-        this.updatesChannel!.send({ content: [
-            `<@&${config.citizen_role}> **Presidential Election voting is now open!**`,
-            `Press the button below to vote before ${this.timestamp(this.votingEnd!)} to have your say in choosing the next President!`,
-            `You can use \`/election listrunning\` at any time to see who has entered.`
-        ].join("\n"), components: [row] });
+        this.updatesChannel!.send({
+            content: [
+                `<@&${config.citizen_role}> **Presidential Election voting is now open!**`,
+                `Press the button below to vote before ${this.timestamp(this.votingEnd!)} to have your say in choosing the next President!`,
+                `You can use \`/election listrunning\` at any time to see who has entered.`
+            ].join("\n"), components: [row]
+        });
     }
 
     endVoting() {
 
     }
 
-    transition() {
-
+    async transition() {
+        await ElectionCandidate.deleteMany().exec();
     }
 }

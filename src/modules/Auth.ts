@@ -11,6 +11,11 @@ export default class Auth extends Module {
         this.logger.info("Enabled");
     }
 
+    async getMinecraftNameFromDiscordId(id: string) {
+        return this.client?.users.cache.get(id); // Temp thing just so that I can set up elections
+        // Or whatever I've yet to figure out a good way of hooking between modules
+    }
+
     async getMembers() {
         const { data } = await axios.get("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members");
         let res: string[] = [];
