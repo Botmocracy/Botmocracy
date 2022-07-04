@@ -7,8 +7,9 @@ import * as mongoose from 'mongoose';
 import Module from "./modules/abstract/Module";
 import Logger from "./util/Logger";
 import { readFileSync } from "fs";
+import Config from "./util/Config";
 
-export const config = JSON.parse(readFileSync("./config.json").toString());
+export const config: Config = JSON.parse(readFileSync("./config.json").toString());
 
 dotenv.config();
 
