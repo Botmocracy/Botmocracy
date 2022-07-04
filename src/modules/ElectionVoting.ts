@@ -1,5 +1,4 @@
 import Module from "./abstract/Module";
-import { config } from "..";
 import { ButtonInteraction, MessageActionRow, MessageButton } from "discord.js";
 
 export default class ElectionVoting extends Module {

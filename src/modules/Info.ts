@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { Collection, CommandInteraction, Interaction, MessageEmbed } from "discord.js";
+import { CommandInteraction, MessageEmbed } from "discord.js";
 import { CallbackError } from "mongoose";
 import { request } from 'undici';
 import Town from "../schema/Town";
