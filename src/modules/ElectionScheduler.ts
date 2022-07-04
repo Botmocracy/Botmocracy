@@ -76,13 +76,13 @@ export default class ElectionScheduler extends Module {
         this.updateElectionPhase(ElectionPhase.REGISTRATION);
         this.updatesChannel!.send([
             `<@&${config.citizen_role}> **Presidential Election registration is now open!**`,
-            `Any citizen may run. To register, run \`/enterelection\` and specify your running-mate, who will be vice president if elected.`,
+            `Any citizen may run. To register, run \`/election enter\` and specify your running-mate, who will be vice president if elected.`,
             `Important times to take note of:`,
             `${this.timestamp(this.votingBegin!)} - Registration ends and voting begins.`,
             `${this.timestamp(this.votingEnd!)} - Voting ends and counting begins.`,
             `${this.timestamp(this.powerTransition!)} - Transition of power.`,
             ``,
-            `You can use \`/listrunning\` at any time to see who has entered.`
+            `You can use \`/election listrunning\` at any time to see who has entered.`
         ].join("\n"));
     }
 
@@ -98,7 +98,7 @@ export default class ElectionScheduler extends Module {
         this.updatesChannel!.send({ content: [
             `<@&${config.citizen_role}> **Presidential Election voting is now open!**`,
             `Press the button below to vote before ${this.timestamp(this.votingEnd!)} to have your say in choosing the next President!`,
-            `You can use \`/listrunning\` at any time to see who has entered.`
+            `You can use \`/election listrunning\` at any time to see who has entered.`
         ].join("\n"), components: [row] });
     }
 
