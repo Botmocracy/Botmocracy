@@ -12,8 +12,15 @@ export default class Auth extends Module {
     }
 
     async getMinecraftNameFromDiscordId(id: string) {
-        return this.client?.users.cache.get(id); // Temp thing just so that I can set up elections
-        // Or whatever I've yet to figure out a good way of hooking between modules
+        let req;
+        try {
+            req = await axios.get(`https://minecraftauth.me/api/lookup?discord=${id}`);
+        } catch (error) {
+            return undefined;
+        }
+
+        const name = await this.getName(req.data.minecraft.identifier);
+        return name        
     }
 
     async getMembers() {
