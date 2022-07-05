@@ -5,7 +5,7 @@ import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import Module from "./abstract/Module";
-
+// TODO use update instead of reply where possible
 export default class ElectionRegistration extends Module {
     name = "ElectionRegistration";
 
