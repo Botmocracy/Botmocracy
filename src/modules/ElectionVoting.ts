@@ -8,7 +8,7 @@ import ElectionVote from "../schema/ElectionVote";
 export default class ElectionVoting extends Module {
     name = "ElectionVoting";
     modules!: Collection<string, Module>;
-    draftBallots: Collection<string, Array<string | null>> = new Collection();
+    draftBallots: Collection<string, (string | null)[]> = new Collection();
 
     async onEnable() {
         this.logger.info("Enabled");
@@ -71,7 +71,7 @@ export default class ElectionVoting extends Module {
     async getVotingPage(page: number, user: User): Promise<InteractionUpdateOptions> {
         return new Promise(async (res) => {
             // See if they've submitted a vote before and if so fill in the values
-            if (page == 0) {
+            if (page == 0 && !this.draftBallots.get(user.id)) {
                 let previousVote = await ElectionVote.findOne({ discordId: user.id }).exec();
                 if (previousVote) {
                     this.draftBallots.set(user.id, previousVote.preferences as Array<string | null>);
@@ -152,7 +152,6 @@ export default class ElectionVoting extends Module {
         const numberOfCandidates = (await ElectionInfo.find().exec()).length;
         const ballot = this.draftBallots.get(i.user.id) ? this.draftBallots.get(i.user.id)! : Array(numberOfCandidates).fill(null);
         ballot[preference] = (i.values[0] != "no_preference" ? i.values[0] : null);
-        console.log(ballot)
         this.draftBallots.set(i.user.id, ballot);
 
         const ballotPage = Math.floor(preference / 4);
@@ -174,6 +173,8 @@ export default class ElectionVoting extends Module {
         let outputMessage = "**PLEASE CONFIRM THAT THE BELOW VOTE IS CORRECT:**";
 
         const draftBallot = this.draftBallots.get(i.user.id)?.filter((pref, pos) => pref != null && this.draftBallots.get(i.user.id)!.indexOf(pref) == pos);
+
+        if (draftBallot!.length == 0) return i.reply({ content: "You must specify at least one preference before saving your ballot.", ephemeral: true });
 
         for (let i in draftBallot) {
             let iAsNumber = parseInt(i); // It's already a number but just so ts will stfu
