@@ -3,6 +3,7 @@ import { config } from "..";
 import { ButtonInteraction, Collection, GuildMemberRoleManager, InteractionReplyOptions, InteractionUpdateOptions, MessageActionRow, MessageButton, MessageSelectMenu, MessageSelectOptionData, SelectMenuInteraction, User } from "discord.js";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
+import ElectionVote from "../schema/ElectionVote";
 
 export default class ElectionVoting extends Module {
     name = "ElectionVoting";
@@ -27,6 +28,7 @@ export default class ElectionVoting extends Module {
                 if (i.customId == "electionvote") this.startVote(i);
                 else if (i.customId.startsWith("electionvotingpage")) i.update(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user));
                 else if (i.customId == "submitelectionvote") this.submitVote(i);
+                else if (i.customId == "confirmsubmitelectionvote") this.confirmSubmitVote(i);
             } else if (i.isSelectMenu()) {
                 if (i.customId.startsWith("electionpreference")) this.recordVotePreference(i);
             }
@@ -68,17 +70,30 @@ export default class ElectionVoting extends Module {
 
     async getVotingPage(page: number, user: User): Promise<InteractionUpdateOptions> {
         return new Promise(async (res) => {
+            // See if they've submitted a vote before and if so fill in the values
+            if (page == 0) {
+                let previousVote = await ElectionVote.findOne({ discordId: user.id }).exec();
+                if (previousVote) {
+                    this.draftBallots.set(user.id, previousVote.preferences as Array<string | null>);
+                }
+            }
+
             const electionPhase = await ElectionInfo.findOne().exec();
             if (electionPhase?.currentPhase != 2) res({ content: "Voting is not currently open." });
 
             const candidates = await ElectionCandidate.find().exec();
-            const candidatesFormattedAsMenuOptions: MessageSelectOptionData[] = [];
+            const candidatesFormattedAsMenuOptions: Array<MessageSelectOptionData> = [];
             for (const candidate of candidates) {
                 candidatesFormattedAsMenuOptions.push({
                     label: `${(await this.client?.users.fetch(candidate.discordId!)!).tag} (Pres), ${(await this.client?.users.fetch(candidate.runningMateDiscordId!)!).tag} (VP)`,
                     value: candidate.discordId!
                 });
             }
+
+            candidatesFormattedAsMenuOptions.push({
+                label: "No preference",
+                value: "no_preference"
+            })
 
             const votingMessageComponents = [];
 
@@ -136,7 +151,8 @@ export default class ElectionVoting extends Module {
         const preference = parseInt(i.customId.split("-")[1]);
         const numberOfCandidates = (await ElectionInfo.find().exec()).length;
         const ballot = this.draftBallots.get(i.user.id) ? this.draftBallots.get(i.user.id)! : Array(numberOfCandidates).fill(null);
-        ballot[preference] = i.values[0];
+        ballot[preference] = (i.values[0] != "no_preference" ? i.values[0] : null);
+        console.log(ballot)
         this.draftBallots.set(i.user.id, ballot);
 
         const ballotPage = Math.floor(preference / 4);
@@ -157,7 +173,7 @@ export default class ElectionVoting extends Module {
 
         let outputMessage = "**PLEASE CONFIRM THAT THE BELOW VOTE IS CORRECT:**";
 
-        const draftBallot = this.draftBallots.get(i.user.id)?.filter(p => p != null);
+        const draftBallot = this.draftBallots.get(i.user.id)?.filter((pref, pos) => pref != null && this.draftBallots.get(i.user.id)!.indexOf(pref) == pos);
 
         for (let i in draftBallot) {
             let iAsNumber = parseInt(i); // It's already a number but just so ts will stfu
@@ -165,5 +181,23 @@ export default class ElectionVoting extends Module {
         }
 
         i.update({ content: outputMessage, components: [row] });
+    }
+
+    async confirmSubmitVote(i: ButtonInteraction) {
+        const electionPhase = await ElectionInfo.findOne().exec();
+        if (electionPhase?.currentPhase != 2) return i.update({ content: "Voting is not currently open.", components: [] });
+
+        const preferences = this.draftBallots.get(i.user.id);
+        if (!preferences) return i.update({ content: "Your draft preferences seem to have not been saved. You will need to re-enter them by clicking on the `Vote` button again."})
+
+        const vote = new ElectionVote({
+            discordId: i.user.id,
+            preferences: preferences.filter((pref, pos) => pref != null && preferences.indexOf(pref) == pos)
+        });
+
+        await ElectionVote.deleteOne({ discordId: i.user.id }).exec();
+        await vote.save();
+
+        i.update({ content: "Saved! Thanks for voting!", components: [] });
     }
 }
