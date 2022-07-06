@@ -1,10 +1,11 @@
-import { MessageActionRow, MessageButton, TextChannel } from "discord.js";
+import { Collection, MessageActionRow, MessageButton, TextChannel } from "discord.js";
 import { config } from "..";
 import ElectionInfo from "../schema/ElectionInfo";
 import Module from "./abstract/Module";
 import * as timestring from 'timestring'; // Why can't they just do this like everyone else
 import { ElectionPhase } from "../util/ElectionPhase";
 import ElectionCandidate from "../schema/ElectionCandidate";
+import ElectionCounter from "./ElectionCounter";
 
 export default class ElectionScheduler extends Module {
     name = "ElectionScheduler";
@@ -14,6 +15,8 @@ export default class ElectionScheduler extends Module {
     votingBegin: number | undefined;
     votingEnd: number | undefined;
     powerTransition: number | undefined;
+
+    counter: ElectionCounter | undefined;
 
     async onEnable() {
         this.logger.info("Enabled");
@@ -51,6 +54,10 @@ export default class ElectionScheduler extends Module {
                 if (Date.now() > this.powerTransition) this.transition();
                 else setTimeout(() => this.transition(), this.powerTransition - Date.now());
         }
+    }
+
+    onModulesLoaded(modules: Collection<string, Module>): void {
+        this.counter = modules.get("ElectionCounter") as ElectionCounter;
     }
 
     timestamp(time: number) {
@@ -104,7 +111,12 @@ export default class ElectionScheduler extends Module {
     }
 
     endVoting() {
+        this.updateElectionPhase(ElectionPhase.TRANSITION);
+        this.updatesChannel!.send("**Election voting has closed.** Counting will commence shortly.");
 
+        while (!this.counter) { } // Wait for the counter to become ready before doing anything
+
+        this.counter.commenceCount();
     }
 
     async transition() {

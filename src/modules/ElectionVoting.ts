@@ -1,14 +1,13 @@
 import Module from "./abstract/Module";
 import { config } from "..";
-import { ButtonInteraction, Collection, GuildMemberRoleManager, InteractionReplyOptions, InteractionUpdateOptions, MessageActionRow, MessageButton, MessageSelectMenu, MessageSelectOptionData, SelectMenuInteraction, User } from "discord.js";
+import { ButtonInteraction, GuildMemberRoleManager, InteractionUpdateOptions, MessageActionRow, MessageButton, MessageSelectMenu, MessageSelectOptionData, SelectMenuInteraction, User } from "discord.js";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import ElectionVote from "../schema/ElectionVote";
 
 export default class ElectionVoting extends Module {
     name = "ElectionVoting";
-    modules!: Collection<string, Module>;
-    draftBallots: Collection<string, (string | null)[]> = new Collection();
+    draftBallots: Map<string, (string | null)[]> = new Map();
 
     async onEnable() {
         this.logger.info("Enabled");
@@ -33,10 +32,6 @@ export default class ElectionVoting extends Module {
                 if (i.customId.startsWith("electionpreference")) this.recordVotePreference(i);
             }
         });
-    }
-
-    onModulesLoaded(modules: Collection<string, Module>): void {
-        this.modules = modules;
     }
 
     async startVote(i: ButtonInteraction) {

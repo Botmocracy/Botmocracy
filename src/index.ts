@@ -1,6 +1,6 @@
 import { REST } from "@discordjs/rest";
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
-import { Client, Collection, Intents } from "discord.js";
+import { Client, Intents } from "discord.js";
 import * as dotenv from "dotenv";
 import { readdirSync } from "fs";
 import * as mongoose from 'mongoose';
@@ -22,7 +22,7 @@ intents.add(Intents.FLAGS.GUILD_MEMBERS);
 
 const client = new Client({ intents: intents, allowedMentions: { parse: config.allowed_mentions } });
 const logger = new Logger("Index");
-const modules = new Collection<string, Module>();
+const modules = new Map<string, Module>();
 
 client.on('ready', async (client) => {
     // Do module things
