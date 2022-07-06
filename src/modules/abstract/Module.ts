@@ -1,4 +1,4 @@
-import { CacheType, Client, Collection, CommandInteraction, GuildMemberRoleManager, Interaction } from "discord.js";
+import { CacheType, Client, CommandInteraction, GuildMemberRoleManager, Interaction } from "discord.js";
 import { CommandOptions, SubcommandOptions }  from "../../util/CommandOptions";
 import Logger from "../../util/Logger";
 export default class Module {
@@ -52,7 +52,7 @@ export default class Module {
 
     onEnable(): void { }
 
-    onModulesLoaded(modules: Collection<string, Module>): void { } // Runs when all modules are loaded
+    onModulesLoaded(modules: Map<string, Module>): void { } // Runs when all modules are loaded
     
     slashCommands: {[key: string]: CommandOptions | SubcommandOptions } = {}
 }
