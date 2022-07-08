@@ -31,7 +31,7 @@ export default class ElectionCounter extends Module {
 
         const votesRaw = await ElectionVote.find().exec();
         for (const vote of votesRaw) {
-            let ballot = (vote.preferences! as Array<string>).filter(p => this.candidates.includes(p)) /*I've already said this in the schema why do you need it a second time...?*/;
+            let ballot = (vote.preferences! as Array<string>/*I've already said this in the schema why do you need it a second time...?*/).filter(p => this.candidates.includes(p));
             if (ballot.length == 0) return;
 
             if (!this.votes[ballot[0]]) this.votes[ballot[0]] = [];
