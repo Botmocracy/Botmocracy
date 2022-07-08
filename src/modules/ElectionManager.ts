@@ -176,8 +176,8 @@ export default class ElectionManager extends Module {
         const vicePresidentMember = await guild?.members.fetch(winners[1]);
 
         // THere is a possibility that they will have left the server
-        if (presidentMember) presidentMember.roles.add(presidentRole);
-        if (vicePresidentMember) vicePresidentMember.roles.add(vicePresidentRole);
+        if (presidentMember != undefined && presidentMember.roles != undefined) presidentMember.roles.add(presidentRole);
+        if (vicePresidentMember != undefined && vicePresidentMember.roles != undefined) vicePresidentMember.roles.add(vicePresidentRole);
 
         const nextElectionTime = await this.scheduleNextElection();
 

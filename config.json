@@ -7,9 +7,9 @@
     "vice_president_role": "992103024686284891",
     "government_role": "992103308934266891",
     "time_between_elections": "3min",
-    "election_registration_period": "30s",
-    "election_vote_period": "30s",
-    "time_between_counts": "10s",
-    "power_transition_period": "30s",
+    "election_registration_period": "1min",
+    "election_vote_period": "1min",
+    "time_between_counts": "5s",
+    "power_transition_period": "10s",
     "election_updates_channel": "992156721487290398"
 }
