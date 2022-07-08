@@ -164,20 +164,28 @@ export default class ElectionManager extends Module {
 
         const guild = this.client?.guilds.cache.get(config.guild);
 
-        const presidentRole = guild?.roles.cache.get(config.president_role)!;
-        const vicePresidentRole = guild?.roles.cache.get(config.vice_president_role)!;
+        const presidentRole = await guild?.roles.fetch(config.president_role)!;
+        const vicePresidentRole = await guild?.roles.fetch(config.vice_president_role)!;
+        const governmentRole = await guild?.roles.fetch(config.government_role)!;
 
-        if (presidentRole?.members.first()) await presidentRole.members.first()!.roles.remove(presidentRole);
-        if (vicePresidentRole?.members.first()) await vicePresidentRole.members.first()!.roles.remove(vicePresidentRole);
+        if (presidentRole?.members.first()) await presidentRole.members.first()!.roles.remove(presidentRole.id);
+        if (vicePresidentRole?.members.first()) await vicePresidentRole.members.first()!.roles.remove(vicePresidentRole.id);
+        for (const member of Array.from(governmentRole!.members.values())) {
+            await member.roles.remove(governmentRole!.id);
+        }
 
         const winners = electionInfo.winners! as string[]; // Already did this...fucking mongoose
 
         const presidentMember = await guild?.members.fetch(winners[0]);
         const vicePresidentMember = await guild?.members.fetch(winners[1]);
 
-        // THere is a possibility that they will have left the server
-        if (presidentMember != undefined && presidentMember.roles != undefined) presidentMember.roles.add(presidentRole);
-        if (vicePresidentMember != undefined && vicePresidentMember.roles != undefined) vicePresidentMember.roles.add(vicePresidentRole);
+        // There is a possibility that they will have left the server
+        if (presidentMember != undefined && presidentMember.roles != undefined) {
+            presidentMember.roles.add([presidentRole!, governmentRole!]);
+        }
+        if (vicePresidentMember != undefined && vicePresidentMember.roles != undefined) {
+            vicePresidentMember.roles.add([vicePresidentRole!, governmentRole!]);
+        }
 
         const nextElectionTime = await this.scheduleNextElection();
 
@@ -207,8 +215,8 @@ export default class ElectionManager extends Module {
 
             res(nextElectionTime);
 
-            await ElectionCandidate.deleteMany().exec();
-            await ElectionVote.deleteMany().exec();
+            ElectionCandidate.deleteMany().exec();
+            ElectionVote.deleteMany().exec();
         });
     }
 
