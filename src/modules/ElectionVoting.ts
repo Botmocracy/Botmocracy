@@ -12,16 +12,6 @@ export default class ElectionVoting extends Module {
     async onEnable() {
         this.logger.info("Enabled");
 
-        // Temp db stuff for testing
-        await ElectionCandidate.deleteMany().exec();
-        (await this.client?.guilds.cache.get("985425315889299466")?.members.fetch()!).forEach(m => {
-            let entry = new ElectionCandidate({
-                discordId: m.id,
-                runningMateDiscordId: m.id
-            })
-            entry.save();
-        })
-
         this.client?.on("interactionCreate", async (i) => {
             if (i.isButton()) {
                 if (i.customId == "electionvote") this.startVote(i);
@@ -97,7 +87,8 @@ export default class ElectionVoting extends Module {
 
             if (candidates.length < pageEndPreference) pageEndPreference = candidates.length - 1;
 
-            const userDraftBallot = this.draftBallots.get(user.id);
+            let userDraftBallot: (string | null)[] = [];
+            if (this.draftBallots.get(user.id)) userDraftBallot = this.draftBallots.get(user.id)!.filter(p => candidates.map(c => c.discordId!).includes(p!));
 
             for (let j = pageStartPreference; j <= pageEndPreference; j++) {
                 votingMessageComponents.push(
@@ -105,10 +96,10 @@ export default class ElectionVoting extends Module {
                         new MessageSelectMenu()
                             .setCustomId("electionpreference-" + j)
                             .setPlaceholder("Preference " + (j + 1) + (
-                                userDraftBallot && userDraftBallot[j] != null 
-                                ? ": " + candidatesFormattedAsMenuOptions.filter(c => c.value == userDraftBallot[j])[0].label
-                                : ""
-                                ))
+                                userDraftBallot && userDraftBallot[j]
+                                    ? ": " + candidatesFormattedAsMenuOptions.filter(c => c.value == userDraftBallot[j])[0].label
+                                    : ""
+                            ))
                             .addOptions(candidatesFormattedAsMenuOptions)
                     )
                 )
@@ -154,6 +145,8 @@ export default class ElectionVoting extends Module {
     }
 
     async submitVote(i: ButtonInteraction) {
+        const candidates = await ElectionCandidate.find().exec();
+
         const row = new MessageActionRow().addComponents(
             new MessageButton()
                 .setCustomId("electionvotingpage-0")
@@ -167,7 +160,7 @@ export default class ElectionVoting extends Module {
 
         let outputMessage = "**PLEASE CONFIRM THAT THE BELOW VOTE IS CORRECT:**";
 
-        const draftBallot = this.draftBallots.get(i.user.id)?.filter((pref, pos) => pref != null && this.draftBallots.get(i.user.id)!.indexOf(pref) == pos);
+        const draftBallot = this.draftBallots.get(i.user.id)?.filter((pref, pos) => pref != null && this.draftBallots.get(i.user.id)!.indexOf(pref) == pos && candidates.map(c => c.discordId!).includes(pref));
 
         if (draftBallot!.length == 0) return i.reply({ content: "You must specify at least one preference before saving your ballot.", ephemeral: true });
 
@@ -184,7 +177,7 @@ export default class ElectionVoting extends Module {
         if (electionPhase?.currentPhase != 2) return i.update({ content: "Voting is not currently open.", components: [] });
 
         const preferences = this.draftBallots.get(i.user.id);
-        if (!preferences) return i.update({ content: "Your draft preferences seem to have not been saved. You will need to re-enter them by clicking on the `Vote` button again."})
+        if (!preferences) return i.update({ content: "Your draft preferences seem to have not been saved. You will need to re-enter them by clicking on the `Vote` button again." })
 
         const vote = new ElectionVote({
             discordId: i.user.id,
