@@ -1,6 +1,8 @@
 import { MessageMentionTypes } from "discord.js";
 
 export default interface Config {
+    guild: string,
+    announcement_channel: string,
     allowed_mentions: MessageMentionTypes[],
     citizen_role: string,
     president_role: string,

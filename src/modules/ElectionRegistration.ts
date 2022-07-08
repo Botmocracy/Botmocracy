@@ -5,7 +5,7 @@ import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import Module from "./abstract/Module";
-// TODO use update instead of reply where possible
+
 export default class ElectionRegistration extends Module {
     name = "ElectionRegistration";
 
@@ -36,13 +36,13 @@ export default class ElectionRegistration extends Module {
         ElectionInfo.findOne((err: CallbackError, data: any) => {
             if (err) return i.reply({ content: "Error retrieving election info: " + err.toString(), ephemeral: true });
 
-            if (data.currentPhase != 1) return i.reply({
+            if (data.currentPhase != 1) return i.update({
                 content: "Election registration is not currently open. Please refer to <#" + config.election_updates_channel + "> for more information.",
-                ephemeral: true
+                components: []
             })
 
             ElectionCandidate.findOne({ discordId: candidate?.user.id }, (err: CallbackError, data: any) => {
-                if (data) return i.reply({ content: "You have already entered this election.", ephemeral: true });
+                if (data) return i.update({ content: "You have already entered this election.", components: [] });
 
                 const candidateInfo = new ElectionCandidate({
                     discordId: candidate?.user.id,
@@ -50,7 +50,7 @@ export default class ElectionRegistration extends Module {
                 });
                 candidateInfo.save();
 
-                i.reply({ content: "Confirmed!", ephemeral: true });
+                i.update({ content: "Confirmed!", components: [] });
 
                 const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
                 if (!updatesChannel) return;
@@ -76,7 +76,7 @@ export default class ElectionRegistration extends Module {
         if (runningAsPrimary) runningAsPrimary.remove();
         if (runningAsSecondary) runningAsSecondary.remove();
 
-        i.reply({ content: "Confirmed", ephemeral: true });
+        i.update({ content: "Confirmed", components: [] });
 
         const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
         if (!updatesChannel) return;
