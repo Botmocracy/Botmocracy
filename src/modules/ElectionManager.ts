@@ -185,7 +185,7 @@ export default class ElectionManager extends Module {
             await member.roles.remove(vicePresidentRole!.id);
         }
 
-        const winners = electionInfo.winners! as string[]; // Already did this...fucking mongoose
+        const winners = electionInfo.winners?.prototype as string[]; // Already did this...fucking mongoose
 
         const presidentMember = await guild?.members.fetch(winners[0]);
         const vicePresidentMember = await guild?.members.fetch(winners[1]);

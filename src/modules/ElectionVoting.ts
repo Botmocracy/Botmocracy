@@ -59,7 +59,7 @@ export default class ElectionVoting extends Module {
             if (page == 0 && !this.draftBallots.get(user.id)) {
                 let previousVote = await ElectionVote.findOne({ discordId: user.id }).exec();
                 if (previousVote) {
-                    this.draftBallots.set(user.id, previousVote.preferences as Array<string | null>);
+                    this.draftBallots.set(user.id, previousVote.preferences?.prototype as Array<string>);
                 }
             }
 
