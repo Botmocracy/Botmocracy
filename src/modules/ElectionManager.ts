@@ -7,6 +7,7 @@ import { ElectionPhase } from "../util/ElectionPhase";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionCounter from "./ElectionCounter";
 import ElectionVote from "../schema/ElectionVote";
+import ElectionVoting from "./ElectionVoting";
 
 export default class ElectionManager extends Module {
     name = "ElectionManager";
@@ -18,6 +19,7 @@ export default class ElectionManager extends Module {
     powerTransition: number | undefined;
 
     counter: ElectionCounter | undefined;
+    votingHandler: ElectionVoting | undefined;
 
     timeouts: Array<NodeJS.Timeout> = [];
 
@@ -39,6 +41,8 @@ export default class ElectionManager extends Module {
 
     async run() {
         this.timeouts.forEach(t => clearTimeout(t));
+
+        this.votingHandler!.draftBallots = new Map(); // Reset this
 
         const info = await ElectionInfo.findOne().exec();
         if (!info) return this.logger.error("Failed to get election info.");
@@ -68,6 +72,7 @@ export default class ElectionManager extends Module {
 
     onModulesLoaded(modules: Collection<string, Module>): void {
         this.counter = modules.get("ElectionCounter") as ElectionCounter;
+        this.votingHandler = modules.get("ElectionVoting") as ElectionVoting;
     }
 
     timestamp(time: number) {
@@ -168,10 +173,16 @@ export default class ElectionManager extends Module {
         const vicePresidentRole = await guild?.roles.fetch(config.vice_president_role)!;
         const governmentRole = await guild?.roles.fetch(config.government_role)!;
 
-        if (presidentRole?.members.first()) await presidentRole.members.first()!.roles.remove(presidentRole.id);
-        if (vicePresidentRole?.members.first()) await vicePresidentRole.members.first()!.roles.remove(vicePresidentRole.id);
+        await guild?.members.fetch(); // Do the cache things
+
         for (const member of Array.from(governmentRole!.members.values())) {
             await member.roles.remove(governmentRole!.id);
+        }
+        for (const member of Array.from(presidentRole!.members.values())) {
+            await member.roles.remove(presidentRole!.id);
+        }
+        for (const member of Array.from(vicePresidentRole!.members.values())) {
+            await member.roles.remove(vicePresidentRole!.id);
         }
 
         const winners = electionInfo.winners! as string[]; // Already did this...fucking mongoose
@@ -213,10 +224,10 @@ export default class ElectionManager extends Module {
 
             this.run();
 
-            res(nextElectionTime);
-
             ElectionCandidate.deleteMany().exec();
             ElectionVote.deleteMany().exec();
+
+            res(nextElectionTime);
         });
     }
 
