@@ -43,8 +43,26 @@ export default class Admin extends Module {
                         i.reply({content: `Something went wrong when doing git pull: ${err.message}`, ephemeral: true});
                     }
                 });
-                
+
                 process.exit(0);
+            }
+        },
+
+        eval_code: {
+            cmdBuilder: new SlashCommandBuilder().setName("eval_code").setDescription("Evaluates code").setDefaultMemberPermissions(8)
+                .addStringOption(o => o.setName("code").setDescription("The code 2 run")),
+            
+            async executor(i: CommandInteraction) {
+                if (!i.inGuild()) return;
+                const allowedPeople = ["644052617500164097", "468534859611111436", "716779626759716914"];
+                if (!allowedPeople.includes(i.user.id)) return i.reply({ content: "You cannot use this.", ephemeral: true });
+
+                try {
+                    const result = eval(i.options.getString("code", true));
+                    if(result) i.reply({ content: `\`\`\`${result}\`\`\``, ephemeral: true });
+                } catch (err : any) {
+                    i.reply({ content: `\`\`\`${err}\`\`\``, ephemeral: true });
+                }
             }
         }
 
