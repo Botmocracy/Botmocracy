@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import axios from 'axios';
-import { CommandInteraction, GuildMember, PartialGuildMember, Role } from "discord.js";
+import { CommandInteraction, GuildMember, PartialGuildMember, Role, TextChannel } from "discord.js";
 import { config } from "..";
 import Account from "../schema/Account";
 import Module from "./abstract/Module";
@@ -111,6 +111,7 @@ export default class Auth extends Module {
                     member?.roles.add((role as Role));
 
                     i.reply({ content: "Verified!", ephemeral: true });
+                    (this.client?.channels.cache.get(config.welcome_channel)! as TextChannel).send(`${i.user} welcome! Check out <#995567687080091769> for information on joining.`);
                     if(await Account.exists({discordId: i.user.id}).exec()) await Account.deleteOne({discordId: i.user.id}).exec();
 
                     const acnt = new Account({discordId: i.user.id, minecraftUUID: uuid});
