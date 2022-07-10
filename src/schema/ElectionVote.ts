@@ -7,7 +7,7 @@ const electionVoteSchema = new Schema({
 
 let name = "ElectionVote";
 if(process.env.DEV == "true") {
-    name += "-dev";
+    name += "DEV";
 }
 
 export default model(name, electionVoteSchema)
