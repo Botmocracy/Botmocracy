@@ -13,5 +13,6 @@ export default interface Config {
     election_vote_period: string,
     time_between_counts: string,
     power_transition_period: string,
-    election_updates_channel: string
+    election_updates_channel: string,
+    admin_role: string
 }
