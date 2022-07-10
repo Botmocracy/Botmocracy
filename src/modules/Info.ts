@@ -59,7 +59,7 @@ export default class Info extends Module {
                 ),
             subcommands: {
                 get: {
-                    executor: async (i: CommandInteraction) => {
+                    executor: async (i: CommandInteraction): Promise<any> => {
                         await i.deferReply({ ephemeral: true });
                         Town.findOne({ name: i.options.getString("name") }, async (err: any, res: any) => {
                             if (!res || err) {
@@ -83,14 +83,14 @@ export default class Info extends Module {
                     }
                 },
                 add: {
-                    executor: async (i: CommandInteraction) => {
+                    executor: async (i: CommandInteraction): Promise<any> => {
                         await i.deferReply({ ephemeral: true });
                         const townName = i.options.getString("name", true);
 
                         let townData = await this.getTownByName(townName);
-                        if (!townData) return i.reply({ content: "This town does not exist.", ephemeral: true });
+                        if (!townData) return i.editReply({ content: "This town does not exist." });
 
-                        if (await Town.findOne({ name: townName }).exec() != null) return i.reply({ content: "This town is already registered.", ephemeral: true });
+                        if (await Town.findOne({ name: townName }).exec() != null) return i.editReply({ content: "This town is already registered."});
 
                         const town = new Town({
                             name: townData['Town Name'],
