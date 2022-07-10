@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import axios from 'axios';
 import { CommandInteraction, GuildMember, PartialGuildMember, Role } from "discord.js";
+import { config } from "..";
 import Account from "../schema/Account";
 import Module from "./abstract/Module";
 
@@ -55,7 +56,7 @@ export default class Auth extends Module {
     }
 
     async onMemberJoin(member: GuildMember){
-        const allowedGuilds = ["985425315889299466"]
+        const allowedGuilds = [config.guild]
         if(!allowedGuilds.includes(member.guild.id)) return;
 
         const account = await Account.findOne({discordId: member.id});
@@ -82,7 +83,7 @@ export default class Auth extends Module {
 
                 const member = i.guild.members.cache.get(i.user.id);
 
-                if (member?.roles.cache.has("987775509368811530")) {
+                if (member?.roles.cache.has(config.verified_role)) {
                     i.reply({ content: "You're already verified.", ephemeral: true });
                     return;
                 }
@@ -106,11 +107,11 @@ export default class Auth extends Module {
                 }
 
                 if (members.includes(name)) {
-                    const role = i.guild.roles.cache.get("987775509368811530");
+                    const role = i.guild.roles.cache.get(config.verified_role);
                     member?.roles.add((role as Role));
 
                     i.reply({ content: "Verified!", ephemeral: true });
-                    if(await Account.exists({discordId: i.user.id})) await Account.deleteOne({discordId: i.user.id});
+                    if(await Account.exists({discordId: i.user.id}).exec()) await Account.deleteOne({discordId: i.user.id}).exec();
 
                     const acnt = new Account({discordId: i.user.id, minecraftUUID: uuid});
                     await acnt.save();
