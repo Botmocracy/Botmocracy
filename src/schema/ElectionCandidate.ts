@@ -5,4 +5,9 @@ const electionCandidateSchema = new Schema({
     runningMateDiscordId: String
 });
 
-export default model("ElectionCandidate", electionCandidateSchema);
+let name = "ElectionCandidate";
+if(process.env.DEV == "true") {
+    name += "-dev";
+}
+
+export default model(name, electionCandidateSchema)

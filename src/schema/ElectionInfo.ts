@@ -7,4 +7,9 @@ const electionInfoSchema = new Schema({
     winners: { type: Array<string> }
 });
 
-export default model("ElectionInfo", electionInfoSchema);
+let name = "ElectionInfo";
+if(process.env.DEV == "true") {
+    name += "-dev";
+}
+
+export default model(name, electionInfoSchema)

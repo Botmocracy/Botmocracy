@@ -5,4 +5,9 @@ const electionVoteSchema = new Schema({
     preferences: Array<string>
 });
 
-export default model("ElectionVote", electionVoteSchema);
+let name = "ElectionVote";
+if(process.env.DEV == "true") {
+    name += "-dev";
+}
+
+export default model(name, electionVoteSchema)

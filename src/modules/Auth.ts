@@ -18,10 +18,9 @@ export default class Auth extends Module {
     async onRoleAdd(oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) {
         const roles = newMember.roles.cache.map(r => r.id);
 
-        const accnt = await Account.findOne({discordId: newMember.id});
-        if(!accnt) return;
+        if(!(await Account.exists({discordId: newMember.id}))) return;
 
-        await accnt.update({roles: roles});
+        await Account.updateOne({discordId: newMember.id}, {roles: roles});
     }
 
     async getMinecraftNameFromDiscordId(id: string) {
