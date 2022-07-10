@@ -92,7 +92,7 @@ export default class Auth extends Module {
                 try {
                     req = await axios.get(`https://minecraftauth.me/api/lookup?discord=${i.user.id}`);
                 } catch (error) {
-                    i.reply({ content: "You need to verify with https://minecraftauth.me first." });
+                    i.reply({ content: "You need to verify with https://minecraftauth.me first.", ephemeral: true });
                     return;
                 }
                 
