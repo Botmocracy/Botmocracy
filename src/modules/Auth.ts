@@ -81,10 +81,12 @@ export default class Auth extends Module {
                     return;
                 }
 
+                i.deferReply({ ephemeral: true });
+
                 const member = i.guild.members.cache.get(i.user.id);
 
                 if (member?.roles.cache.has(config.verified_role)) {
-                    i.reply({ content: "You're already verified.", ephemeral: true });
+                    i.editReply({ content: "You're already verified." });
                     return;
                 }
                 let req;
@@ -92,7 +94,7 @@ export default class Auth extends Module {
                 try {
                     req = await axios.get(`https://minecraftauth.me/api/lookup?discord=${i.user.id}`);
                 } catch (error) {
-                    i.reply({ content: "You need to verify with https://minecraftauth.me first.", ephemeral: true });
+                    i.editReply({ content: "You need to verify with https://minecraftauth.me first." });
                     return;
                 }
                 
@@ -102,7 +104,7 @@ export default class Auth extends Module {
                 const name = await this.getName(uuid);
 
                 if (name == null) {
-                    i.reply({ content: "I couldn't get your username for some reason. Try again.", ephemeral: true });
+                    i.editReply({ content: "I couldn't get your username for some reason. Try again." });
                     return;
                 }
 
@@ -110,14 +112,13 @@ export default class Auth extends Module {
                     const role = i.guild.roles.cache.get(config.verified_role);
                     member?.roles.add((role as Role));
 
-                    i.reply({ content: "Verified!", ephemeral: true });
+                    i.editReply({ content: "Verified!" });
                     (this.client?.channels.cache.get(config.welcome_channel)! as TextChannel).send(`${i.user} welcome! Check out <#995567687080091769> for information on joining.`);
                     if(await Account.exists({discordId: i.user.id}).exec()) await Account.deleteOne({discordId: i.user.id}).exec();
 
                     const acnt = new Account({discordId: i.user.id, minecraftUUID: uuid});
                     await acnt.save();
-                }
-
+                } else i.editReply({ content: "You do not seem to be an MRT member." });
             }
         }
     }
