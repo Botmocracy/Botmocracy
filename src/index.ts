@@ -9,9 +9,11 @@ import Logger from "./util/Logger";
 import { readFileSync } from "fs";
 import Config from "./util/Config";
 
-export const config: Config = JSON.parse(readFileSync("./config.json").toString());
-
 dotenv.config();
+
+const configFile = process.env.DEV ? "./config-dev.json" : "./config-prod.json";
+
+export const config: Config = JSON.parse(readFileSync(configFile).toString());
 
 mongoose.connect((process.env.MONGO_STRING as string));
 
