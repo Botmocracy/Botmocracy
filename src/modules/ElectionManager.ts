@@ -9,6 +9,7 @@ import ElectionCounter from "./ElectionCounter";
 import ElectionVote from "../schema/ElectionVote";
 import ElectionVoting from "./ElectionVoting";
 import Account from "../schema/Account";
+import { roleMention } from "@discordjs/builders";
 
 export default class ElectionManager extends Module {
     name = "ElectionManager";
@@ -177,12 +178,27 @@ export default class ElectionManager extends Module {
         await guild?.members.fetch(); // Do the cache things
 
         for (const member of Array.from(governmentRole!.members.values())) {
+            const memberAccount = await Account.findOne({discordId: member.id});
+            memberAccount?.update({roles: (memberAccount!.roles as unknown as Array<string>).filter((val, index, arr) => {
+                return val != governmentRole!.id;
+            })});
+
             await member.roles.remove(governmentRole!.id);
         }
         for (const member of Array.from(presidentRole!.members.values())) {
+            const memberAccount = await Account.findOne({discordId: member.id});
+            memberAccount?.update({roles: (memberAccount!.roles as unknown as Array<string>).filter((val, index, arr) => {
+                return val != presidentRole!.id;
+            })});
+            
             await member.roles.remove(presidentRole!.id);
         }
         for (const member of Array.from(vicePresidentRole!.members.values())) {
+            const memberAccount = await Account.findOne({discordId: member.id});
+            memberAccount?.update({roles: (memberAccount!.roles as unknown as Array<string>).filter((val, index, arr) => {
+                return val != vicePresidentRole!.id;
+            })});
+
             await member.roles.remove(vicePresidentRole!.id);
         }
 
