@@ -51,13 +51,6 @@ client.on('ready', async (client) => {
 	    { body: slashCommands },
     );
     logger.info(`${slashCommands.length} application commands reloaded`);
-
-    const guild = client.guilds.cache.get("995567686849400923");
-    const role = await guild?.roles.fetch("995567688833306674");
-
-    const member = await guild?.members.fetch("468534859611111436");
-
-    member?.roles.add(role!);
 });
 
 client.login(process.env.TOKEN);
