@@ -1,5 +1,5 @@
 import { Collection, MessageActionRow, MessageButton, TextChannel } from "discord.js";
-import * as timestring from 'timestring'; // Why can't they just do this like everyone else
+import timestring from 'timestring'; // Why can't they just do this like everyone else
 import { config } from "..";
 import Account from "../schema/Account";
 import ElectionCandidate from "../schema/ElectionCandidate";
