@@ -13,6 +13,8 @@ export default class ElectionRegistration extends Module {
         this.logger.info("Enabled");
 
         this.client?.on("interactionCreate", i => {
+            if(i.guildId != config.guild) return;
+            
             if (i.isButton()) {
                 if (i.customId.startsWith("confirmcandidacy")) {
                     this.confirmCandidacy(i);

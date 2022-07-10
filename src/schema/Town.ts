@@ -8,4 +8,9 @@ const townSchema = new Schema({
     rank: {type: String, required: false, default: "Unranked"}
 })
 
-export default model("Town", townSchema);
+let name = "Town";
+if(process.env.DEV == "true") {
+    name += "-dev";
+}
+
+export default model(name, townSchema)
