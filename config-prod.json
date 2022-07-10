@@ -1,0 +1,15 @@
+{   
+    "guild": "985425315889299466",
+    "announcement_channel": "985635707315945492",
+    "allowed_mentions": ["users", "roles", "everyone"],
+    "citizen_role": "992113680940531773",
+    "president_role": "992102898630672435",
+    "vice_president_role": "992103024686284891",
+    "government_role": "992709892269940787",
+    "time_between_elections": "2months 8h",
+    "election_registration_period": "3days",
+    "election_vote_period": "3days",
+    "time_between_counts": "1min",
+    "power_transition_period": "30min",
+    "election_updates_channel": "992156721487290398"
+}
