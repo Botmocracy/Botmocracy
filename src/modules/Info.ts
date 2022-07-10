@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, MessageEmbed, TextChannel } from "discord.js";
+import axios from "axios";
+import { CommandInteraction, GuildMemberRoleManager, MessageEmbed, TextChannel } from "discord.js";
 import { request } from "undici";
 import { config } from "..";
 import Town from "../schema/Town";
@@ -87,10 +88,10 @@ export default class Info extends Module {
                         await i.deferReply({ ephemeral: true });
                         const townName = i.options.getString("name", true);
 
-                        let townData = await this.getTownByName(townName);
+                        let townData: { [key: string]: string } | undefined = await this.getTownByName(townName);
                         if (!townData) return i.editReply({ content: "This town does not exist." });
 
-                        if (await Town.findOne({ name: townName }).exec() != null) return i.editReply({ content: "This town is already registered."});
+                        if (await Town.findOne({ name: townName }).exec() != null) return i.editReply({ content: "This town is already registered." });
 
                         const town = new Town({
                             name: townData['Town Name'],
@@ -99,10 +100,28 @@ export default class Info extends Module {
                             coords: `${townData['X']} ${townData['Y']} ${townData['Z']}`,
                             rank: townData['Town Rank']
                         });
-                        /* Reason for no town verification: I tried for like 1:30 hours and failed. Also some names on the town list are outdated and implementing that is an entirely different question */
+
+                        const minecraftName = await this.auth?.getMinecraftNameFromDiscordId(i.user.id);
+
+                        const { data: memberData } = await axios.get("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members");
+                        const executorMemberData = memberData.filter((v: { [key: string]: string }) =>
+                            v["Username"] == minecraftName ||
+                            v["Temporary Usernames"].split(", ").includes(minecraftName) ||
+                            v["Former Usernames"].split(", ").includes(minecraftName)
+                        );
+
+                        if (!minecraftName || executorMemberData.length == 0) return i.editReply({ content: "I wasn't able to find your member info." });
+
+                        const usernames: string[] = [];
+                        usernames.push(executorMemberData[0]["Username"]);
+                        usernames.push(...executorMemberData[0]["Temporary Usernames"].split(", "));
+                        usernames.push(...executorMemberData[0]["Former Usernames"].split(", "));
+
+                        if (!usernames.includes(townData["Mayor"])) return i.editReply({ content: "You don't seem to own this town." });
 
                         await town.save();
                         await i.editReply({ content: "Successfully added town!" })
+                        if (i.member!.roles instanceof GuildMemberRoleManager) await i.member!.roles.add(config.citizen_role);
                         const notificationChannel = this.client?.channels.cache.get(config.town_notifications_channel) as TextChannel;
                         notificationChannel.send(`${i.user} has joined with **${townName}**!`);
                     }
