@@ -1,6 +1,8 @@
 import { CacheType, Client, CommandInteraction, GuildMemberRoleManager } from "discord.js";
 import { CommandOptions, SubcommandOptions } from "../../util/CommandOptions";
 import Logger from "../../util/Logger";
+import { config } from "../..";
+
 export default class Module {
     name = "";
 
@@ -30,6 +32,8 @@ export default class Module {
         this.logger = new Logger(this.name);
         this.client.on("interactionCreate", async i => {
             if (!i.isCommand()) return;
+            if (i.guildId != config.guild) return;
+            
             const command = this.slashCommands[i.commandName]
             if (!command) return;
 
