@@ -8,7 +8,7 @@ const electionInfoSchema = new Schema({
 });
 
 let name = "ElectionInfo";
-if(process.env.DEV == "true") {
+if (process.env.DEV) {
     name += "DEV";
 }
 

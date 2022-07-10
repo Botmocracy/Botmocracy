@@ -6,7 +6,7 @@ const electionVoteSchema = new Schema({
 });
 
 let name = "ElectionVote";
-if(process.env.DEV == "true") {
+if (process.env.DEV) {
     name += "DEV";
 }
 
