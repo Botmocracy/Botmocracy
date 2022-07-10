@@ -8,7 +8,7 @@ import Auth from "./Auth";
 
 export default class Info extends Module {
     name = "Info";
-    auth: Auth|undefined = undefined;
+    auth: Auth | undefined = undefined;
 
     onEnable(): void {
         this.logger.info("Enabled");
@@ -21,26 +21,26 @@ export default class Info extends Module {
     }
 
     async onInteraction(i: Interaction) {
-        if(!i.isModalSubmit()) return;
-        if(i.customId != "town") return;
+        if (!i.isModalSubmit()) return;
+        if (i.customId != "town") return;
 
         const name = i.fields.getTextInputValue("townName");
         const mayor = await this.auth?.getMinecraftNameFromDiscordId(i.user.id);
         const depMayor = i.fields.getTextInputValue("townDeputy");
         const coords = i.fields.getTextInputValue("townCoords");
 
-        if(await Town.exists({name: name})) await Town.deleteOne({name: name});
-        const town = new Town({name: name, mayor: mayor, depMayor: depMayor, coords: coords});
+        if (await Town.exists({ name: name })) await Town.deleteOne({ name: name });
+        const town = new Town({ name: name, mayor: mayor, depMayor: depMayor, coords: coords });
 
         await town.save()
-        i.reply({content: "Added.", ephemeral: true});
+        i.reply({ content: "Added.", ephemeral: true });
     }
 
     async getTownByName(name: string) {
-        const result = await request("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World", {maxRedirections: 1});
+        const result = await request("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World", { maxRedirections: 1 });
         let fullBody = '';
 
-        for await(const part of result.body){
+        for await (const part of result.body) {
             fullBody += part
         }
 
@@ -68,7 +68,7 @@ export default class Info extends Module {
                         option.setName("name")
                             .setDescription("Name of the town")
                             .setRequired(true)
-                ))
+                    ))
                 .addSubcommand(s => s
                     .setName("add")
                     .setDescription("Add a town")
@@ -87,25 +87,25 @@ export default class Info extends Module {
                             const mayor = res['mayor'];
                             const depMayor = res['depMayor'];
                             const coords = res['coords'];
-        
+
                             const embed = new MessageEmbed()
                                 .setTitle(name)
                                 .addField("Mayor", mayor)
                                 .addField("Deputy Mayor", depMayor)
                                 .addField("Coords", coords)
                                 .setColor("BLURPLE");
-        
+
                             await i.editReply({ embeds: [embed] });
                         })
                     }
                 },
                 add: {
-                    executor: async (i: CommandInteraction) => {    
-                        await i.deferReply();                    
+                    executor: async (i: CommandInteraction) => {
+                        await i.deferReply();
                         const townName = i.options.getString("name", true);
-                        
+
                         let townData = await this.getTownByName(townName);
-                        if(!townData) return i.reply({content: "This town does not exist.", ephemeral: true});
+                        if (!townData) return i.reply({ content: "This town does not exist.", ephemeral: true });
 
                         const town = new Town({
                             name: townData['Town Name'],
@@ -117,7 +117,7 @@ export default class Info extends Module {
                         /* Reason for no town verification: I tried for like 1:30 hours and failed. Also some names on the town list are outdated and implementing that is an entirely different question */
 
                         await town.save();
-                        await i.editReply({content: "Successfully added town!"})
+                        await i.editReply({ content: "Successfully added town!" })
                     }
                 }
             }
