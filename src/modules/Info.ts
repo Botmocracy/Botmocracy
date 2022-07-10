@@ -100,7 +100,8 @@ export default class Info extends Module {
                     }
                 },
                 add: {
-                    executor: async (i: CommandInteraction) => {                        
+                    executor: async (i: CommandInteraction) => {    
+                        await i.deferReply();                    
                         const townName = i.options.getString("name", true);
                         
                         let townData = await this.getTownByName(townName);
@@ -116,7 +117,7 @@ export default class Info extends Module {
                         /* Reason for no town verification: I tried for like 1:30 hours and failed. Also some names on the town list are outdated and implementing that is an entirely different question */
 
                         await town.save();
-                        await i.reply({content: "Successfully added town!", ephemeral: true})
+                        await i.editReply({content: "Successfully added town!"})
                     }
                 }
             }
