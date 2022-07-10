@@ -8,6 +8,7 @@ import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionCounter from "./ElectionCounter";
 import ElectionVote from "../schema/ElectionVote";
 import ElectionVoting from "./ElectionVoting";
+import Account from "../schema/Account";
 
 export default class ElectionManager extends Module {
     name = "ElectionManager";
@@ -189,14 +190,23 @@ export default class ElectionManager extends Module {
 
         const presidentMember = await guild?.members.fetch(winners[0]);
         const vicePresidentMember = await guild?.members.fetch(winners[1]);
+        
+        const presidentAccount = await Account.findOne({discordId: winners[0]})
+        const vicePresidentAccount = await Account.findOne({discordId: winners[1]});
 
         // There is a possibility that they will have left the server
         if (presidentMember != undefined && presidentMember.roles != undefined) {
             presidentMember.roles.add([presidentRole!, governmentRole!]);
+            (presidentAccount!.roles! as unknown as Array<string>).push(presidentRole!.id);
+            
         }
         if (vicePresidentMember != undefined && vicePresidentMember.roles != undefined) {
             vicePresidentMember.roles.add([vicePresidentRole!, governmentRole!]);
+            (vicePresidentAccount!.roles! as unknown as Array<string>).push(vicePresidentRole!.id);
         }
+
+        await presidentAccount?.save();
+        await vicePresidentAccount?.save();
 
         const nextElectionTime = await this.scheduleNextElection();
 

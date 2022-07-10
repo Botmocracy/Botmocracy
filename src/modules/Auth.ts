@@ -1,7 +1,8 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, Role } from "discord.js";
+import { CommandInteraction, GuildMember, Role } from "discord.js";
 import axios from 'axios';
 import Module from "./abstract/Module";
+import Account from "../schema/Account";
 
 
 export default class Auth extends Module {
@@ -9,6 +10,7 @@ export default class Auth extends Module {
 
     onEnable(): void {
         this.logger.info("Enabled");
+        this.client?.on('guildMemberAdd', (member) => this.onMemberJoin(member));
     }
 
     async getMinecraftNameFromDiscordId(id: string) {
@@ -40,6 +42,20 @@ export default class Auth extends Module {
         }
 
         return data['name'];
+    }
+
+    async onMemberJoin(member: GuildMember){
+        const allowedGuilds = ["985425315889299466"]
+        if(!allowedGuilds.includes(member.guild.id)) return;
+
+        const account = await Account.findOne({discordId: member.id});
+        if(!account) return;
+
+        const roles = (account.roles as unknown as Array<string>);
+        roles.forEach((value) => {
+            const role = member.guild.roles.cache.get(value);
+            member.roles.add(role!);
+        });
     }
 
     slashCommands = {
@@ -84,6 +100,10 @@ export default class Auth extends Module {
                     member?.roles.add((role as Role));
 
                     i.reply({ content: "Verified!", ephemeral: true });
+                    if(await Account.exists({discordId: i.user.id})) await Account.deleteOne({discordId: i.user.id});
+
+                    const acnt = new Account({discordId: i.user.id, minecraftUUID: uuid});
+                    await acnt.save();
                 }
 
             }
