@@ -1,6 +1,7 @@
 import { Collection, MessageActionRow, MessageButton, TextChannel } from "discord.js";
 import * as timestring from 'timestring'; // Why can't they just do this like everyone else
 import { config } from "..";
+import Account from "../schema/Account";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import ElectionVote from "../schema/ElectionVote";
@@ -176,14 +177,32 @@ export default class ElectionManager extends Module {
         await guild?.members.fetch(); // Do the cache things
 
         for (const member of Array.from(governmentRole!.members.values())) {
+            const account = await Account.findOne({discordId: member.id}).exec();
+            if(account) {
+                const newRoles = (account.roles as unknown as Array<string>).filter(role => role != governmentRole!.id);
+                await Account.updateOne({discordId: member.id}, {roles: newRoles});
+            }
+
             await member.roles.remove(governmentRole!.id);
         }
 
         for (const member of Array.from(presidentRole!.members.values())) {
+            const account = await Account.findOne({discordId: member.id}).exec();
+            if(account) {
+                const newRoles = (account.roles as unknown as Array<string>).filter(role => role != presidentRole!.id);
+                await Account.updateOne({discordId: member.id}, {roles: newRoles});
+            }
+
             await member.roles.remove(presidentRole!.id);
         }
 
         for (const member of Array.from(vicePresidentRole!.members.values())) {
+            const account = await Account.findOne({discordId: member.id}).exec();
+            if(account) {
+                const newRoles = (account.roles as unknown as Array<string>).filter(role => role != vicePresidentRole!.id);
+                await Account.updateOne({discordId: member.id}, {roles: newRoles});
+            }
+
             await member.roles.remove(vicePresidentRole!.id);
         }
 
