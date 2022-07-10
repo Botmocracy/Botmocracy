@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, Interaction, MessageEmbed } from "discord.js";
+import { CommandInteraction, MessageEmbed } from "discord.js";
 import { request } from "undici";
 import { config } from "..";
 import Town from "../schema/Town";
@@ -16,25 +16,7 @@ export default class Info extends Module {
     }
 
     onModulesLoaded(modules: Map<string, Module>): void {
-        this.client?.on("interactionCreate", (i) => this.onInteraction(i))
-
         this.auth = (modules.get('Auth') as Auth)
-    }
-
-    async onInteraction(i: Interaction) {
-        if (!i.isModalSubmit()) return;
-        if (i.customId != "town") return;
-
-        const name = i.fields.getTextInputValue("townName");
-        const mayor = await this.auth?.getMinecraftNameFromDiscordId(i.user.id);
-        const depMayor = i.fields.getTextInputValue("townDeputy");
-        const coords = i.fields.getTextInputValue("townCoords");
-
-        if (await Town.exists({ name: name })) await Town.deleteOne({ name: name });
-        const town = new Town({ name: name, mayor: mayor, depMayor: depMayor, coords: coords });
-
-        await town.save()
-        i.reply({ content: "Added.", ephemeral: true });
     }
 
     async getTownByName(name: string) {
