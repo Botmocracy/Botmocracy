@@ -15,5 +15,6 @@ export default interface Config {
     power_transition_period: string,
     election_updates_channel: string,
     admin_role: string,
-    verified_role: string
+    verified_role: string,
+    town_notifications_channel: string
 }
