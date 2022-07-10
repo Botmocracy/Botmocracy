@@ -3,7 +3,7 @@ import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-type
 import { Client, Intents } from "discord.js";
 import * as dotenv from "dotenv";
 import { readdirSync, readFileSync } from "fs";
-import * as mongoose from 'mongoose';
+import mongoose from 'mongoose';
 import Module from "./modules/abstract/Module";
 import ElectionInfo from "./schema/ElectionInfo";
 import Config from "./util/Config";
