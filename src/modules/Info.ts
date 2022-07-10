@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, MessageEmbed } from "discord.js";
+import { CommandInteraction, MessageEmbed, TextChannel } from "discord.js";
 import { request } from "undici";
 import { config } from "..";
 import Town from "../schema/Town";
@@ -90,17 +90,21 @@ export default class Info extends Module {
                         let townData = await this.getTownByName(townName);
                         if (!townData) return i.reply({ content: "This town does not exist.", ephemeral: true });
 
+                        if (await Town.findOne({ name: townName }).exec() != null) return i.reply({ content: "This town is already registered.", ephemeral: true });
+
                         const town = new Town({
                             name: townData['Town Name'],
                             mayor: townData['Mayor'],
                             depMayor: townData['Deputy Mayor'],
-                            coords: `${townData['X']} ${townData['Y']} ${townData['Z']}}`,
+                            coords: `${townData['X']} ${townData['Y']} ${townData['Z']}`,
                             rank: townData['Town Rank']
                         });
                         /* Reason for no town verification: I tried for like 1:30 hours and failed. Also some names on the town list are outdated and implementing that is an entirely different question */
 
                         await town.save();
                         await i.editReply({ content: "Successfully added town!" })
+                        const notificationChannel = this.client?.channels.cache.get(config.town_notifications_channel) as TextChannel;
+                        notificationChannel.send(`${i.user} has joined with **${townName}**!`);
                     }
                 }
             }
