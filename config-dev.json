@@ -11,5 +11,6 @@
     "election_vote_period": "1min",
     "time_between_counts": "5s",
     "power_transition_period": "20s",
-    "election_updates_channel": "992156721487290398"
+    "election_updates_channel": "992156721487290398",
+    "admin_role": "985426658922201158"
 }
