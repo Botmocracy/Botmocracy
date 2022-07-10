@@ -5,6 +5,7 @@ import * as dotenv from "dotenv";
 import { readdirSync, readFileSync } from "fs";
 import * as mongoose from 'mongoose';
 import Module from "./modules/abstract/Module";
+import ElectionInfo from "./schema/ElectionInfo";
 import Config from "./util/Config";
 import Logger from "./util/Logger";
 
