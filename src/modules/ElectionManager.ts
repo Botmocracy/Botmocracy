@@ -27,15 +27,6 @@ export default class ElectionManager extends Module {
         this.logger.info("Enabled");
         this.updatesChannel = this.client?.channels.cache.get(config.election_updates_channel) as TextChannel;
 
-        // TODO remove this stuff when ready to actually do elections
-        const electionInfo = new ElectionInfo({
-            processStartTime: Date.now() + 3000,
-            currentPhase: ElectionPhase.INACTIVE
-        });
-
-        await ElectionInfo.deleteMany().exec();
-        await electionInfo.save();
-
         this.run();
     }
 
