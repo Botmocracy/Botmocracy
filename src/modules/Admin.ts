@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, MessageActionRow, Modal, ModalSubmitInteraction, TextInputComponent } from "discord.js";
 import { config } from "..";
 import Module from "./abstract/Module";
 import { exec } from 'child_process';
@@ -9,6 +9,20 @@ export default class Admin extends Module {
 
     onEnable(): void {
         this.logger.info("Enabled");
+        this.client?.on('interactionCreate', (i) => {
+            if(!i.isModalSubmit()) return;
+            this.onModalSubmit(i);
+        })
+    }
+
+    async onModalSubmit(i: ModalSubmitInteraction) {
+        if(!i.customId.startsWith("message")) return;
+        const idSplit = i.customId.split("-");
+        const channelId = idSplit[1];
+        const channel = this.client?.channels.cache.get(channelId);
+        if(!channel?.isText()) return i.reply({ content: "Imagine", ephemeral: true });
+        channel.send(i.fields.getTextInputValue("text"));
+        i.reply({content: "Done", ephemeral: true});
     }
 
     slashCommands = {
@@ -43,7 +57,7 @@ export default class Admin extends Module {
                         i.reply({content: `Something went wrong when doing git pull: ${err.message}`, ephemeral: true});
                     }
                 });
-
+                i.reply({ content: "Restarting", ephemeral: true });
                 process.exit(0);
             }
         },
@@ -63,6 +77,26 @@ export default class Admin extends Module {
                 } catch (err : any) {
                     i.reply({ content: `\`\`\`${err}\`\`\``, ephemeral: true });
                 }
+            }
+        },
+
+        say: {
+            cmdBuilder: new SlashCommandBuilder().setName("say").setDescription("Says shit").setDefaultMemberPermissions(8)
+                .addChannelOption(o => o.setName("channel").setDescription("The channel to send")),
+
+            async executor(i: CommandInteraction) {
+                if (!i.inGuild()) return;
+                const allowedPeople = ["644052617500164097", "468534859611111436", "716779626759716914"];
+                if (!allowedPeople.includes(i.user.id)) return i.reply({ content: "You cannot use this.", ephemeral: true });
+
+                const actionRow = new MessageActionRow<TextInputComponent>().setComponents(
+                    new TextInputComponent().setCustomId("text").setLabel("Message").setMaxLength(2000).setStyle("PARAGRAPH")
+                );
+
+                const channel = i.options.getChannel("channel", true);
+                const modal = new Modal().addComponents(actionRow).setTitle("Message Modal").setCustomId(`message-${channel.id}`);
+
+                i.showModal(modal);
             }
         }
 
