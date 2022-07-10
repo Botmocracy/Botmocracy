@@ -74,6 +74,8 @@ export default class ElectionManager extends Module {
     onModulesLoaded(modules: Collection<string, Module>): void {
         this.counter = modules.get("ElectionCounter") as ElectionCounter;
         this.votingHandler = modules.get("ElectionVoting") as ElectionVoting;
+
+        this.run();
     }
 
     timestamp(time: number) {
