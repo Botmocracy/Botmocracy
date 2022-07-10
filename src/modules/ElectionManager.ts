@@ -27,8 +27,6 @@ export default class ElectionManager extends Module {
     async onEnable() {
         this.logger.info("Enabled");
         this.updatesChannel = this.client?.channels.cache.get(config.election_updates_channel) as TextChannel;
-
-        this.run();
     }
 
     async run() {
