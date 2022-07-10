@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction, Interaction, MessageEmbed } from "discord.js";
 import { request } from "undici";
+import { config } from "..";
 import Town from "../schema/Town";
 import Module from "./abstract/Module";
 import Auth from "./Auth";
@@ -57,7 +58,7 @@ export default class Info extends Module {
 
     slashCommands = {
         town: {
-            allowedRoles: ["992113680940531773"],
+            allowedRoles: [config.verified_role],
             cmdBuilder: new SlashCommandBuilder()
                 .setName("town")
                 .setDescription("Add or get info about a town")
@@ -77,7 +78,7 @@ export default class Info extends Module {
             subcommands: {
                 get: {
                     executor: async (i: CommandInteraction) => {
-                        await i.deferReply();
+                        await i.deferReply({ ephemeral: true });
                         Town.findOne({ name: i.options.getString("name") }, async (err: any, res: any) => {
                             if (!res || err) {
                                 await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
@@ -101,7 +102,7 @@ export default class Info extends Module {
                 },
                 add: {
                     executor: async (i: CommandInteraction) => {
-                        await i.deferReply();
+                        await i.deferReply({ ephemeral: true });
                         const townName = i.options.getString("name", true);
 
                         let townData = await this.getTownByName(townName);
