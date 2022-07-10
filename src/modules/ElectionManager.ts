@@ -1,12 +1,12 @@
 import { Collection, MessageActionRow, MessageButton, TextChannel } from "discord.js";
-import { config } from "..";
-import ElectionInfo from "../schema/ElectionInfo";
-import Module from "./abstract/Module";
 import * as timestring from 'timestring'; // Why can't they just do this like everyone else
-import { ElectionPhase } from "../util/ElectionPhase";
+import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
-import ElectionCounter from "./ElectionCounter";
+import ElectionInfo from "../schema/ElectionInfo";
 import ElectionVote from "../schema/ElectionVote";
+import { ElectionPhase } from "../util/ElectionPhase";
+import Module from "./abstract/Module";
+import ElectionCounter from "./ElectionCounter";
 import ElectionVoting from "./ElectionVoting";
 
 export default class ElectionManager extends Module {

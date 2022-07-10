@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, Guild, GuildMember, PartialGuildMember, Role } from "discord.js";
 import axios from 'axios';
-import Module from "./abstract/Module";
+import { CommandInteraction, GuildMember, PartialGuildMember, Role } from "discord.js";
 import Account from "../schema/Account";
+import Module from "./abstract/Module";
 
 
 export default class Auth extends Module {
