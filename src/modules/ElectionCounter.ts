@@ -106,7 +106,7 @@ export default class ElectionCounter extends Module {
             this.doCount(this.distributeVotes(eliminating), `Distribution of votes belonging to ${formatArrayValuesAsHumanReadableString(eliminating.map(c => "<@" + c + ">"))}`);
         }
 
-        (this.client!.channels.cache.get(config.election_updates_channel)! as TextChannel).send(outputMessageBuilder.join("\n"));
+        (this.client!.channels.cache.get(config.election_updates_channel)! as TextChannel).send({ content: outputMessageBuilder.join("\n"), allowedMentions: { parse: [] } });
     }
 
     distributeVotes(candidates: string[]): { [key: string]: number } {
