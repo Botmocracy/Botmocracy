@@ -120,8 +120,9 @@ export default class Info extends Module {
                         if (!usernames.includes(townData["Mayor"])) return i.editReply({ content: "You don't seem to own this town." });
 
                         await town.save();
-                        await i.editReply({ content: "Successfully added town!" })
-                        if (i.member!.roles instanceof GuildMemberRoleManager) await i.member!.roles.add(config.citizen_role);
+                        await i.editReply({ content: "Successfully added town!" });
+                        const member = await this.client?.guilds.cache.get(config.guild)?.members.fetch(i.user);
+                        await member!.roles.add(config.citizen_role);
                         const notificationChannel = this.client?.channels.cache.get(config.town_notifications_channel) as TextChannel;
                         notificationChannel.send(`${i.user} has joined with **${townName}**!`);
                     }
