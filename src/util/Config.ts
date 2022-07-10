@@ -16,5 +16,6 @@ export default interface Config {
     election_updates_channel: string,
     admin_role: string,
     verified_role: string,
-    town_notifications_channel: string
+    town_notifications_channel: string,
+    welcome_channel: string
 }
