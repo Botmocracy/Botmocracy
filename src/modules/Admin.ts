@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 import { config } from "..";
 import Module from "./abstract/Module";
+import { exec } from 'child_process';
 
 export default class Admin extends Module {
     name = "Admin";
@@ -28,6 +29,22 @@ export default class Admin extends Module {
 
                 member?.roles.add(role!);
                 return i.reply({ content: "Done.", ephemeral: true });
+            }
+        },
+        reloadandrestart: {
+            cmdBuilder: new SlashCommandBuilder().setName("reloadandrestart").setDescription("Runs git pull & restarts the bot").setDefaultMemberPermissions(8),
+            async executor(i: CommandInteraction) {
+                if (!i.inGuild()) return;
+                const allowedPeople = ["644052617500164097", "468534859611111436", "716779626759716914"];
+                if (!allowedPeople.includes(i.user.id)) return i.reply({ content: "You cannot use this.", ephemeral: true });
+
+                exec("git pull", (err, stdout, stderr) => {
+                    if(err != null) {
+                        i.reply({content: `Something went wrong when doing git pull: ${err.message}`, ephemeral: true});
+                    }
+                });
+                
+                process.exit(0);
             }
         }
 
