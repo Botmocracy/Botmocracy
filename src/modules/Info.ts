@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, Interaction, MessageActionRow, MessageEmbed, MessageSelectMenu, MessageSelectMenuOptions, MessageSelectOptionData, Modal, TextInputComponent } from "discord.js";
+import { CommandInteraction, Interaction, MessageEmbed } from "discord.js";
 import { request } from "undici";
 import Town from "../schema/Town";
 import Module from "./abstract/Module";

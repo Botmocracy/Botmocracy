@@ -1,9 +1,9 @@
-import Module from "./abstract/Module";
-import { config } from "..";
 import { ButtonInteraction, GuildMemberRoleManager, InteractionUpdateOptions, MessageActionRow, MessageButton, MessageSelectMenu, MessageSelectOptionData, SelectMenuInteraction, User } from "discord.js";
+import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import ElectionVote from "../schema/ElectionVote";
+import Module from "./abstract/Module";
 
 export default class ElectionVoting extends Module {
     name = "ElectionVoting";

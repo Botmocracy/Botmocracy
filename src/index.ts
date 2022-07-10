@@ -2,12 +2,11 @@ import { REST } from "@discordjs/rest";
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { Client, Intents } from "discord.js";
 import * as dotenv from "dotenv";
-import { readdirSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import * as mongoose from 'mongoose';
 import Module from "./modules/abstract/Module";
-import Logger from "./util/Logger";
-import { readFileSync } from "fs";
 import Config from "./util/Config";
+import Logger from "./util/Logger";
 
 dotenv.config();
 
