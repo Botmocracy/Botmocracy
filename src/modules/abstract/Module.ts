@@ -1,5 +1,5 @@
-import { CacheType, Client, CommandInteraction, GuildMemberRoleManager, Interaction } from "discord.js";
-import { CommandOptions, SubcommandOptions }  from "../../util/CommandOptions";
+import { CacheType, Client, CommandInteraction, GuildMemberRoleManager } from "discord.js";
+import { CommandOptions, SubcommandOptions } from "../../util/CommandOptions";
 import Logger from "../../util/Logger";
 export default class Module {
     name = "";

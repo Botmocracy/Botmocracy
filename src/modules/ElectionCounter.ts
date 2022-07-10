@@ -1,5 +1,4 @@
 import { TextChannel } from "discord.js";
-import timestring = require("timestring");
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionVote from "../schema/ElectionVote";
@@ -7,6 +6,7 @@ import { formatArrayValuesAsHumanReadableString, getNextNonEmptyIndex } from "..
 import wait from "../util/wait";
 import Module from "./abstract/Module";
 import ElectionManager from "./ElectionManager";
+import timestring = require("timestring");
 
 export default class ElectionCounter extends Module {
     name = "ElectionCounter";
