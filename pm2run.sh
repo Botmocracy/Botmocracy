@@ -1,0 +1,1 @@
+pm2 start tsnode -- -P tsconfig.json ./src/index.ts
