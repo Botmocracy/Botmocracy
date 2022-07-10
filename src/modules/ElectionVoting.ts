@@ -13,6 +13,7 @@ export default class ElectionVoting extends Module {
         this.logger.info("Enabled");
 
         this.client?.on("interactionCreate", async (i) => {
+            if(i.guildId != config.guild) return;
             if (i.isButton()) {
                 if (i.customId == "electionvote") this.startVote(i);
                 else if (i.customId.startsWith("electionvotingpage")) i.update(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user));
