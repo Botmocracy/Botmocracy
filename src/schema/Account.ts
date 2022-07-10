@@ -6,4 +6,9 @@ const accountSchema = new Schema({
     roles: {type: Array<String>, default: ["992113680940531773", "987775509368811530"]}
 })
 
-export default model("Account", accountSchema)
+let name = "Account";
+if(process.env.DEV == "true") {
+    name += "-dev";
+}
+
+export default model(name, accountSchema)
