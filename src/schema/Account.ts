@@ -8,7 +8,7 @@ const accountSchema = new Schema({
 
 let name = "Account";
 if(process.env.DEV == "true") {
-    name += "-dev";
+    name += "DEV";
 }
 
 export default model(name, accountSchema)
