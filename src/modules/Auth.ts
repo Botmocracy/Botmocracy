@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, GuildMember, Role } from "discord.js";
+import { CommandInteraction, Guild, GuildMember, PartialGuildMember, Role } from "discord.js";
 import axios from 'axios';
 import Module from "./abstract/Module";
 import Account from "../schema/Account";
@@ -11,6 +11,16 @@ export default class Auth extends Module {
     onEnable(): void {
         this.logger.info("Enabled");
         this.client?.on('guildMemberAdd', (member) => this.onMemberJoin(member));
+        this.client?.on('guildMemberUpdate', this.onRoleAdd);
+    }
+
+    async onRoleAdd(oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) {
+        const roles = newMember.roles.cache.map(r => r.id);
+
+        const accnt = await Account.findOne({discordId: newMember.id});
+        if(!accnt) return;
+
+        await accnt.update({roles: roles});
     }
 
     async getMinecraftNameFromDiscordId(id: string) {
