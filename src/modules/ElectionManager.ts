@@ -46,17 +46,13 @@ export default class ElectionManager extends Module {
 
         switch (currentPhase) {
             case 0:
-                if (Date.now() > this.registrationBegin!!) this.beginRegistration();
-                else this.timeouts.push(setTimeout(() => this.beginRegistration(), this.registrationBegin!! - Date.now()));
+                this.timeouts.push(setTimeout(() => this.beginRegistration(), this.registrationBegin!! - Date.now()));
             case 1:
-                if (Date.now() > this.votingBegin) this.beginVoting();
-                else this.timeouts.push(setTimeout(() => this.beginVoting(), this.votingBegin - Date.now()));
+                this.timeouts.push(setTimeout(() => this.beginVoting(), this.votingBegin - Date.now()));
             case 2:
-                if (Date.now() > this.votingEnd) this.endVoting();
-                else this.timeouts.push(setTimeout(() => this.endVoting(), this.votingEnd - Date.now()));
+                this.timeouts.push(setTimeout(() => this.endVoting(), this.votingEnd - Date.now()));
             case 3:
-                if (Date.now() > this.powerTransition) this.transition();
-                else this.timeouts.push(setTimeout(() => this.transition(), this.powerTransition - Date.now()));
+                this.timeouts.push(setTimeout(() => this.transition(), this.powerTransition - Date.now()));
         }
     }
 
