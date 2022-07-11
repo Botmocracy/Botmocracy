@@ -57,7 +57,7 @@ export default class Admin extends Module {
                         i.reply({content: `Something went wrong when doing git pull: ${err.message}`, ephemeral: true});
                     }
                 });
-                i.reply({ content: "Restarting", ephemeral: true });
+                await i.reply({ content: "Restarting", ephemeral: true });
                 process.exit(0);
             }
         },
