@@ -112,12 +112,13 @@ export default class Info extends Module {
 
                         if (!minecraftName || executorMemberData.length == 0) return i.editReply({ content: "I wasn't able to find your member info." });
 
-                        const usernames: string[] = [];
+                        let usernames: string[] = [];
                         usernames.push(executorMemberData[0]["Username"]);
                         usernames.push(...executorMemberData[0]["Temporary Usernames"].split(", "));
                         usernames.push(...executorMemberData[0]["Former Usernames"].split(", "));
+                        usernames = usernames.map(n => n.toLowerCase());
 
-                        if (!usernames.includes(townData["Mayor"])) return i.editReply({ content: "You don't seem to own this town." });
+                        if (!usernames.includes(townData["Mayor"].toLowerCase())) return i.editReply({ content: "You don't seem to own this town." });
 
                         await town.save();
                         await i.editReply({ content: "Successfully added town!" });
