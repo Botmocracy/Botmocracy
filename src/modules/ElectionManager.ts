@@ -27,7 +27,9 @@ export default class ElectionManager extends Module {
     async onEnable() {
         this.logger.info("Enabled");
         this.updatesChannel = this.client?.channels.cache.get(config.election_updates_channel) as TextChannel;
+    }
 
+    async run() {
         if (process.env.dev) {
             const electionInfo = new ElectionInfo({
                 processStartTime: Date.now() + 3000,
@@ -37,9 +39,7 @@ export default class ElectionManager extends Module {
             await ElectionInfo.deleteMany().exec();
             await electionInfo.save();
         }
-    }
 
-    async run() {
         this.timeouts.forEach(t => clearTimeout(t));
 
         this.votingHandler!.draftBallots = new Map(); // Reset this
