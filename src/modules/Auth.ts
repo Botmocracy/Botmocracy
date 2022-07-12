@@ -9,6 +9,8 @@ import Module from "./abstract/Module";
 export default class Auth extends Module {
     name = "Auth";
 
+    nameCache: Map<string, string> = new Map();
+
     onEnable(): void {
         this.logger.info("Enabled");
         this.client?.on('guildMemberAdd', (member) => this.onMemberJoin(member));
@@ -26,17 +28,32 @@ export default class Auth extends Module {
 
     async getMinecraftNameFromDiscordId(id: string) {
         try {
+            if (this.nameCache.has(id)) return this.nameCache.get(id);
+
             const account = await Account.findOne({ discordId: id }).exec();
 
             if (!account || !account.minecraftUUID) return undefined;
 
             const MojangRes = await axios.get(`https://sessionserver.mojang.com/session/minecraft/profile/${account.minecraftUUID}`);
 
-            if (MojangRes.data.name) return MojangRes.data.name;
+            if (MojangRes.data.name) {
+                this.nameCache.set(id, MojangRes.data.name);
+                return MojangRes.data.name;
+            }
             else return undefined;
         } catch (error) {
             return undefined;
         }    
+    }
+
+    async getMinecraftOrDiscordName(discordUserId: string, escapeMarkdown?: boolean) {
+        const minecraftUsername = await this.getMinecraftNameFromDiscordId(discordUserId);
+        if (minecraftUsername) return escapeMarkdown ? minecraftUsername.replace("_", "\\_") : minecraftUsername;
+        else {
+            const discordUser = await this.client?.users.fetch(discordUserId);
+            if (!discordUser) return "<unknown>";
+            else return discordUser.username;
+        }
     }
 
     async getMembers() {

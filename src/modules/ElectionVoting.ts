@@ -4,10 +4,13 @@ import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import ElectionVote from "../schema/ElectionVote";
 import Module from "./abstract/Module";
+import Auth from "./Auth";
 
 export default class ElectionVoting extends Module {
     name = "ElectionVoting";
     draftBallots: Map<string, (string | null)[]> = new Map();
+
+    authModule!: Auth;
 
     async onEnable() {
         this.logger.info("Enabled");
@@ -16,13 +19,20 @@ export default class ElectionVoting extends Module {
             if(i.guildId != config.guild) return;
             if (i.isButton()) {
                 if (i.customId == "electionvote") this.startVote(i);
-                else if (i.customId.startsWith("electionvotingpage")) i.update(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user));
+                else if (i.customId.startsWith("electionvotingpage")) {
+                    i.deferUpdate();
+                    i.editReply(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
+                }
                 else if (i.customId == "submitelectionvote") this.submitVote(i);
                 else if (i.customId == "confirmsubmitelectionvote") this.confirmSubmitVote(i);
             } else if (i.isSelectMenu()) {
                 if (i.customId.startsWith("electionpreference")) this.recordVotePreference(i);
             }
         });
+    }
+
+    onModulesLoaded(modules: Map<string, Module>): void {
+        this.authModule = modules.get("Auth") as Auth;
     }
 
     async startVote(i: ButtonInteraction) {
@@ -54,7 +64,7 @@ export default class ElectionVoting extends Module {
         });
     }
 
-    async getVotingPage(page: number, user: User): Promise<InteractionUpdateOptions> {
+    async getVotingPage(page: number, user: User): Promise<any> {
         return new Promise(async (res) => {
             // See if they've submitted a vote before and if so fill in the values
             if (page == 0 && !this.draftBallots.get(user.id)) {
@@ -71,7 +81,7 @@ export default class ElectionVoting extends Module {
             const candidatesFormattedAsMenuOptions: Array<MessageSelectOptionData> = [];
             for (const candidate of candidates) {
                 candidatesFormattedAsMenuOptions.push({
-                    label: `${(await this.client?.users.fetch(candidate.discordId!)!).tag} (Pres), ${(await this.client?.users.fetch(candidate.runningMateDiscordId!)!).tag} (VP)`,
+                    label: `${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!)} (Pres), ${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!)} (VP)`,
                     value: candidate.discordId!
                 });
             }
@@ -167,7 +177,7 @@ export default class ElectionVoting extends Module {
 
         for (let i in draftBallot) {
             let iAsNumber = parseInt(i); // It's already a number but just so ts will stfu
-            outputMessage += `\nPreference ${iAsNumber + 1}: <@${draftBallot[iAsNumber]}>`;
+            outputMessage += `\nPreference ${iAsNumber + 1}: **${await this.authModule.getMinecraftOrDiscordName(draftBallot[iAsNumber]!, true)}**`;
         }
 
         i.update({ content: outputMessage, components: [row] });
