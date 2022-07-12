@@ -5,9 +5,12 @@ import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import Module from "./abstract/Module";
+import Auth from "./Auth";
 
 export default class ElectionRegistration extends Module {
     name = "ElectionRegistration";
+
+    authModule!: Auth;
 
     onEnable(): void {
         this.logger.info("Enabled");
@@ -23,6 +26,10 @@ export default class ElectionRegistration extends Module {
                 }
             }
         });
+    }
+
+    onModulesLoaded(modules: Map<string, Module>): void {
+        this.authModule = modules.get("Auth") as Auth;
     }
 
     confirmCandidacy(i: ButtonInteraction) {
@@ -178,17 +185,22 @@ export default class ElectionRegistration extends Module {
                 },
                 listrunning: {
                     executor: async (i: CommandInteraction) => {
+                        i.deferReply({ ephemeral: true });
+
                         const candidates = await ElectionCandidate.find().exec();
         
-                        if (!candidates) return i.reply({ content: "Unable to fetch the candidates list. Please try again later.", ephemeral: true });
+                        if (!candidates) {
+                            await i.editReply({ content: "Unable to fetch the candidates list. Please try again later." });
+                            return;
+                        } 
         
                         let outputMessage = "**Candidates running in this election:**";
         
                         for (const candidate of candidates) {
-                            outputMessage += `\n<@${candidate.discordId}> for President; <@${candidate.runningMateDiscordId}> for Vice President.`;
+                            outputMessage += `\n**${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!, true)}** for President; **${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!, true)}** for Vice President.`;
                         }
         
-                        i.reply({ content: outputMessage, ephemeral: true });
+                        i.editReply({ content: outputMessage });
                     }
                 }
             }
