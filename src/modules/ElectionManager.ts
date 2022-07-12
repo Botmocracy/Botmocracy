@@ -27,6 +27,16 @@ export default class ElectionManager extends Module {
     async onEnable() {
         this.logger.info("Enabled");
         this.updatesChannel = this.client?.channels.cache.get(config.election_updates_channel) as TextChannel;
+
+        if (process.env.dev) {
+            const electionInfo = new ElectionInfo({
+                processStartTime: Date.now() + 3000,
+                currentPhase: 0
+            })
+
+            await ElectionInfo.deleteMany().exec();
+            await electionInfo.save();
+        }
     }
 
     async run() {
@@ -207,12 +217,12 @@ export default class ElectionManager extends Module {
             vicePresidentMember.roles.add([vicePresidentRole!, governmentRole!]);
         }
 
-        const nextElectionTime = await this.scheduleNextElection();
-
-        (this.client?.channels.cache.get(config.announcement_channel)! as TextChannel).send([
-            `@everyone give a big hand to our new President and Vice President, <@${winners[0]}> and <@${winners[1]}>!`,
-            `The next election process has been scheduled to begin at ${this.timestamp(nextElectionTime)}.`
-        ].join("\n"))
+        this.scheduleNextElection().then(nextElectionTime => {
+            (this.client?.channels.cache.get(config.announcement_channel)! as TextChannel).send([
+                `@everyone give a big hand to our new President and Vice President, <@${winners[0]}> and <@${winners[1]}>!`,
+                `The next election process has been scheduled to begin at ${this.timestamp(nextElectionTime)}.`
+            ].join("\n"))
+        }).catch(err => this.logger.error(err))
     }
 
     async scheduleNextElection(): Promise<number> {
@@ -228,6 +238,8 @@ export default class ElectionManager extends Module {
                 currentPhase: ElectionPhase.INACTIVE
             });
 
+            if (newElectionInfo.processStartTime!.getTime() < Date.now()) return rej("Election is scheduled for the past. This will not end well.")
+
             await currentInfo.delete();
             await newElectionInfo.save();
 
@@ -241,7 +253,8 @@ export default class ElectionManager extends Module {
     }
 
     async noElectionCandidatesOrVotes() {
-        const nextElectionTime = await this.scheduleNextElection();
-        this.updatesChannel!.send(`Well....this is awkward. No candidates are entered/have voted in the election. Roles will remain as are until the next scheduled one at ${this.timestamp(nextElectionTime)}`);
+        this.scheduleNextElection().then(nextElectionTime => {
+            this.updatesChannel!.send(`Well....this is awkward. No candidates are entered/have voted in the election. Roles will remain as are until the next scheduled one at ${this.timestamp(nextElectionTime)}`);
+        }).catch(err => this.logger.error(err))
     }
 }
