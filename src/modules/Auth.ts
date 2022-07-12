@@ -25,15 +25,18 @@ export default class Auth extends Module {
     }
 
     async getMinecraftNameFromDiscordId(id: string) {
-        let req;
         try {
-            req = await axios.get(`https://minecraftauth.me/api/lookup?discord=${id}`);
+            const account = await Account.findOne({ discordId: id }).exec();
+
+            if (!account || !account.minecraftUUID) return undefined;
+
+            const MojangRes = await axios.get(`https://sessionserver.mojang.com/session/minecraft/profile/${account.minecraftUUID}`);
+
+            if (MojangRes.data.name) return MojangRes.data.name;
+            else return undefined;
         } catch (error) {
             return undefined;
-        }
-
-        const name = await this.getName(req.data.minecraft.identifier);
-        return name        
+        }    
     }
 
     async getMembers() {
