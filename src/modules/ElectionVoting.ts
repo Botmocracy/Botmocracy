@@ -20,7 +20,7 @@ export default class ElectionVoting extends Module {
             if (i.isButton()) {
                 if (i.customId == "electionvote") this.startVote(i);
                 else if (i.customId.startsWith("electionvotingpage")) {
-                    i.reply(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
+                    i.update(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
                 }
                 else if (i.customId == "submitelectionvote") this.submitVote(i);
                 else if (i.customId == "confirmsubmitelectionvote") this.confirmSubmitVote(i);
@@ -172,7 +172,7 @@ export default class ElectionVoting extends Module {
 
         const draftBallot = this.draftBallots.get(i.user.id)?.filter((pref, pos) => pref != null && this.draftBallots.get(i.user.id)!.indexOf(pref) == pos && candidates.map(c => c.discordId!).includes(pref));
 
-        if (draftBallot!.length == 0) return i.reply({ content: "You must specify at least one preference before saving your ballot.", ephemeral: true });
+        if (!draftBallot || draftBallot.length == 0) return i.reply({ content: "You must specify at least one preference before saving your ballot.", ephemeral: true });
 
         for (let i in draftBallot) {
             let iAsNumber = parseInt(i); // It's already a number but just so ts will stfu
