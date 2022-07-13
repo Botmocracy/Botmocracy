@@ -52,7 +52,7 @@ export default class ElectionVoting extends Module {
         i.reply({
             content:
                 [
-                    `**Important information regarding voting:**`,
+                    `**Important information regarding voting:** (Please read)`,
                     `- Votes are counted using the [Alternate Vote (AV) method](<https://www.youtube.com/watch?v=3Y3jE3B8HsE>).`,
                     `- You may rank as many or as few candidates as you like, as long as you select at least one.`,
                     `- You may change your vote at any time up until voting closes by clicking the vote button again, selecting your new preferences and saving.`,
