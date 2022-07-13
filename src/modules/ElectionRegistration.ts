@@ -185,12 +185,10 @@ export default class ElectionRegistration extends Module {
                 },
                 listrunning: {
                     executor: async (i: CommandInteraction) => {
-                        i.deferReply({ ephemeral: true });
-
                         const candidates = await ElectionCandidate.find().exec();
         
                         if (!candidates) {
-                            await i.editReply({ content: "Unable to fetch the candidates list. Please try again later." });
+                            await i.reply({ content: "Unable to fetch the candidates list. Please try again later.", ephemeral: true });
                             return;
                         } 
         
@@ -200,7 +198,7 @@ export default class ElectionRegistration extends Module {
                             outputMessage += `\n**${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!, true)}** for President; **${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!, true)}** for Vice President.`;
                         }
         
-                        i.editReply({ content: outputMessage });
+                        i.reply({ content: outputMessage, ephemeral: true });
                     }
                 }
             }
