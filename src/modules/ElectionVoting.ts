@@ -98,7 +98,7 @@ export default class ElectionVoting extends Module {
             if (candidates.length < pageEndPreference) pageEndPreference = candidates.length - 1;
 
             let userDraftBallot: (string | null)[] = [];
-            if (this.draftBallots.get(user.id)) userDraftBallot = this.draftBallots.get(user.id)!.filter(p => candidates.map(c => c.discordId!).includes(p!));
+            if (this.draftBallots.get(user.id)) userDraftBallot = this.draftBallots.get(user.id)!;
 
             for (let j = pageStartPreference; j <= pageEndPreference; j++) {
                 votingMessageComponents.push(
