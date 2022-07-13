@@ -139,7 +139,7 @@ export default class ElectionVoting extends Module {
             const buttonRow = new MessageActionRow().addComponents(buttonRowComponents);
             votingMessageComponents.push(buttonRow);
 
-            res({ content: `**Election ballot page ${page + 1}/${Math.ceil(candidates.length / 4)}**`, components: votingMessageComponents });
+            res({ content: `**Election ballot page ${page + 1}/${Math.ceil(candidates.length / 4)}**`, components: votingMessageComponents, ephemeral: true });
         })
     }
 
