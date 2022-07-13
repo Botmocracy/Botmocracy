@@ -20,8 +20,7 @@ export default class ElectionVoting extends Module {
             if (i.isButton()) {
                 if (i.customId == "electionvote") this.startVote(i);
                 else if (i.customId.startsWith("electionvotingpage")) {
-                    i.deferUpdate();
-                    i.editReply(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
+                    i.reply(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
                 }
                 else if (i.customId == "submitelectionvote") this.submitVote(i);
                 else if (i.customId == "confirmsubmitelectionvote") this.confirmSubmitVote(i);
