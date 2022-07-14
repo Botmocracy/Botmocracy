@@ -245,8 +245,8 @@ export default class ElectionManager extends Module {
 
             this.run();
 
-            ElectionCandidate.deleteMany().exec();
-            ElectionVote.deleteMany().exec();
+            // ElectionCandidate.deleteMany().exec();
+            // ElectionVote.deleteMany().exec();
 
             res(nextElectionTime);
         });
