@@ -20,7 +20,7 @@ export default class ElectionVoting extends Module {
             if (i.isButton()) {
                 if (i.customId == "electionvote") this.startVote(i);
                 else if (i.customId.startsWith("electionvotingpage")) {
-                    i.reply(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
+                    i.update(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
                 }
                 else if (i.customId == "submitelectionvote") this.submitVote(i);
                 else if (i.customId == "confirmsubmitelectionvote") this.confirmSubmitVote(i);
@@ -52,7 +52,7 @@ export default class ElectionVoting extends Module {
         i.reply({
             content:
                 [
-                    `**Important information regarding voting:**`,
+                    `**Important information regarding voting:** (Please read)`,
                     `- Votes are counted using the [Alternate Vote (AV) method](<https://www.youtube.com/watch?v=3Y3jE3B8HsE>).`,
                     `- You may rank as many or as few candidates as you like, as long as you select at least one.`,
                     `- You may change your vote at any time up until voting closes by clicking the vote button again, selecting your new preferences and saving.`,
@@ -98,7 +98,7 @@ export default class ElectionVoting extends Module {
             if (candidates.length < pageEndPreference) pageEndPreference = candidates.length - 1;
 
             let userDraftBallot: (string | null)[] = [];
-            if (this.draftBallots.get(user.id)) userDraftBallot = this.draftBallots.get(user.id)!.filter(p => candidates.map(c => c.discordId!).includes(p!));
+            if (this.draftBallots.get(user.id)) userDraftBallot = this.draftBallots.get(user.id)!;
 
             for (let j = pageStartPreference; j <= pageEndPreference; j++) {
                 votingMessageComponents.push(
@@ -172,7 +172,7 @@ export default class ElectionVoting extends Module {
 
         const draftBallot = this.draftBallots.get(i.user.id)?.filter((pref, pos) => pref != null && this.draftBallots.get(i.user.id)!.indexOf(pref) == pos && candidates.map(c => c.discordId!).includes(pref));
 
-        if (draftBallot!.length == 0) return i.reply({ content: "You must specify at least one preference before saving your ballot.", ephemeral: true });
+        if (!draftBallot || draftBallot.length == 0) return i.reply({ content: "You must specify at least one preference before saving your ballot.", ephemeral: true });
 
         for (let i in draftBallot) {
             let iAsNumber = parseInt(i); // It's already a number but just so ts will stfu
