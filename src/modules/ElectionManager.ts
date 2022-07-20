@@ -1,5 +1,6 @@
 import { Collection, MessageActionRow, MessageButton, TextChannel } from "discord.js";
 import timestring from 'timestring'; // Why can't they just do this like everyone else
+import lt from 'long-timeout';
 import { config } from "..";
 import Account from "../schema/Account";
 import ElectionCandidate from "../schema/ElectionCandidate";
@@ -22,7 +23,7 @@ export default class ElectionManager extends Module {
     counter: ElectionCounter | undefined;
     votingHandler: ElectionVoting | undefined;
 
-    timeouts: Array<NodeJS.Timeout> = [];
+    timeouts: Array<lt.Timeout> = [];
 
     async onEnable() {
         this.logger.info("Enabled");
@@ -40,7 +41,7 @@ export default class ElectionManager extends Module {
             await electionInfo.save();
         }
 
-        this.timeouts.forEach(t => clearTimeout(t));
+        this.timeouts.forEach(t => lt.clearTimeout(t));
 
         this.votingHandler!.draftBallots = new Map(); // Reset this
 
@@ -56,13 +57,13 @@ export default class ElectionManager extends Module {
 
         switch (currentPhase) {
             case 0:
-                this.timeouts.push(setTimeout(() => this.beginRegistration(), this.registrationBegin!! - Date.now()));
+                this.timeouts.push(lt.setTimeout(() => this.beginRegistration(), this.registrationBegin!! - Date.now()));
             case 1:
-                this.timeouts.push(setTimeout(() => this.beginVoting(), this.votingBegin - Date.now()));
+                this.timeouts.push(lt.setTimeout(() => this.beginVoting(), this.votingBegin - Date.now()));
             case 2:
-                this.timeouts.push(setTimeout(() => this.endVoting(), this.votingEnd - Date.now()));
+                this.timeouts.push(lt.setTimeout(() => this.endVoting(), this.votingEnd - Date.now()));
             case 3:
-                this.timeouts.push(setTimeout(() => this.transition(), this.powerTransition - Date.now()));
+                this.timeouts.push(lt.setTimeout(() => this.transition(), this.powerTransition - Date.now()));
         }
     }
 
@@ -211,7 +212,7 @@ export default class ElectionManager extends Module {
         // There is a possibility that they will have left the server
         if (presidentMember != undefined && presidentMember.roles != undefined) {
             presidentMember.roles.add([presidentRole!, governmentRole!]);
-            
+
         }
         if (vicePresidentMember != undefined && vicePresidentMember.roles != undefined) {
             vicePresidentMember.roles.add([vicePresidentRole!, governmentRole!]);
