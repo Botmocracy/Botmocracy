@@ -58,6 +58,7 @@ export default class Admin extends Module {
                     }
                 });
                 await i.reply({ content: "Restarting", ephemeral: true });
+                i.client.user?.setStatus("invisible"); // So we can see when it comes back online
                 process.exit(0);
             }
         },
