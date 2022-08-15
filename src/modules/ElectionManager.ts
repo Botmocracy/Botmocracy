@@ -30,16 +30,6 @@ export default class ElectionManager extends Module {
     }
 
     async run() {
-        if (process.env.dev) {
-            const electionInfo = new ElectionInfo({
-                processStartTime: Date.now() + 3000,
-                currentPhase: 0
-            })
-
-            await ElectionInfo.deleteMany().exec();
-            await electionInfo.save();
-        }
-
         this.timeouts.forEach(t => clearTimeout(t));
 
         this.votingHandler!.draftBallots = new Map(); // Reset this
@@ -66,9 +56,19 @@ export default class ElectionManager extends Module {
         }
     }
 
-    onModulesLoaded(modules: Collection<string, Module>): void {
+    async onModulesLoaded(modules: Collection<string, Module>) {
         this.counter = modules.get("ElectionCounter") as ElectionCounter;
         this.votingHandler = modules.get("ElectionVoting") as ElectionVoting;
+
+        if (process.env.dev) {
+            const electionInfo = new ElectionInfo({
+                processStartTime: Date.now() + 3000,
+                currentPhase: 0
+            })
+
+            await ElectionInfo.deleteMany().exec();
+            await electionInfo.save();
+        }
 
         this.run();
     }
@@ -245,8 +245,8 @@ export default class ElectionManager extends Module {
 
             this.run();
 
-            // ElectionCandidate.deleteMany().exec();
-            // ElectionVote.deleteMany().exec();
+            ElectionCandidate.deleteMany().exec();
+            ElectionVote.deleteMany().exec();
 
             res(nextElectionTime);
         });
