@@ -57,8 +57,8 @@ export default class Admin extends Module {
                         i.reply({content: `Something went wrong when doing git pull: ${err.message}`, ephemeral: true});
                     }
                 });
-                await i.reply({ content: "Restarting", ephemeral: true });
                 i.client.user?.setStatus("invisible"); // So we can see when it comes back online
+                await i.reply({ content: "Restarting", ephemeral: true });
                 process.exit(0);
             }
         },
