@@ -17,5 +17,7 @@ export default interface Config {
     admin_role: string,
     verified_role: string,
     town_notifications_channel: string,
-    welcome_channel: string
+    welcome_channel: string,
+    admins: string[], // It's better to hardcode people with elevated permissions just in case we mess up role perms
+    protected_roles: string[]
 }
