@@ -1,4 +1,4 @@
-import { MessageMentionTypes } from "discord.js";
+import { MessageMentionTypes, PermissionString, RoleResolvable } from "discord.js";
 
 export default interface Config {
     guild: string,
@@ -18,5 +18,8 @@ export default interface Config {
     verified_role: string,
     town_notifications_channel: string,
     welcome_channel: string,
-    admins: string[] // It's better to hardcode people with elevated permissions just in case we mess up role perms
+    admins: string[], // It's better to hardcode people with elevated permissions just in case we mess up role perms
+    restricted_permissions: PermissionString[],
+    restricted_permissions_allowed_roles: RoleResolvable[],
+    role_audit_interval: string;
 }
