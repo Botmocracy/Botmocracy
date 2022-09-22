@@ -1,15 +1,15 @@
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
 import { REST } from "@discordjs/rest";
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { Client, Intents } from "discord.js";
-import * as dotenv from "dotenv";
 import { readdirSync, readFileSync } from "fs";
 import mongoose from 'mongoose';
 import Module from "./modules/abstract/Module";
-import ElectionInfo from "./schema/ElectionInfo";
 import Config from "./util/Config";
 import Logger from "./util/Logger";
-
-dotenv.config();
 
 const configFile = process.env.DEV ? "./config-dev.json" : "./config-prod.json";
 

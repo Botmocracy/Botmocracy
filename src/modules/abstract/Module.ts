@@ -2,6 +2,7 @@ import { CacheType, Client, CommandInteraction, GuildMemberRoleManager } from "d
 import { CommandOptions, SubcommandOptions } from "../../util/CommandOptions";
 import Logger from "../../util/Logger";
 import { config } from "../..";
+import checkCitizenship from "../../util/check-citizenship";
 
 export default class Module {
     name = "";
@@ -19,7 +20,12 @@ export default class Module {
 
         if (command.allowedRoles)
             for (const role of command.allowedRoles) {
-                if (i.member?.roles instanceof GuildMemberRoleManager 
+                // Do the advanced citizen check here so it doesn't have to be done everywhere else
+                if (role == config.citizen_role) {
+                    if (await checkCitizenship(i.user.id)) {
+                        return await command.executor(i);
+                    }
+                } else if (i.member?.roles instanceof GuildMemberRoleManager 
                     ? i.member?.roles.cache.has(role.toString()) 
                     : i.member?.roles.includes(role.toString()))
                     return await command.executor(i);
@@ -47,8 +53,9 @@ export default class Module {
                     await this.handleCommand(command.subcommands[subcommandName], i);
                 } else await this.handleCommand(command, i)
             } catch (e: any) {
-                this.logger.error(e.toString());
-                i.reply({content: `An error occurred. \`\`\`\ ${e.toString()} \`\`\``, ephemeral: true});
+                this.logger.error(e.stack);
+                const errorMessage = `An error occurred. \`\`\`\ ${e.toString()} \`\`\``;
+                i.reply({ content: errorMessage, ephemeral: true }).catch(err => i.editReply({ content: errorMessage }));
             }
         })
         this.onEnable();

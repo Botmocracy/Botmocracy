@@ -3,6 +3,7 @@ import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import ElectionVote from "../schema/ElectionVote";
+import checkCitizenship from "../util/check-citizenship";
 import Module from "./abstract/Module";
 import Auth from "./Auth";
 
@@ -35,10 +36,8 @@ export default class ElectionVoting extends Module {
     }
 
     async startVote(i: ButtonInteraction) {
-        if (i.member?.roles instanceof GuildMemberRoleManager
-            ? !i.member?.roles.cache.has(config.citizen_role)
-            : !i.member?.roles.includes(config.citizen_role))
-            return i.reply({ content: "You must be a citizen to vote.", ephemeral: true });
+        if (!await checkCitizenship(i.user.id)) return i.reply({ content: "You must be a citizen to vote.", ephemeral: true });
+            
         const electionPhase = await ElectionInfo.findOne().exec();
         if (electionPhase?.currentPhase != 2) return i.reply({ content: "Voting is not currently open.", ephemeral: true });
 

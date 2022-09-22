@@ -4,6 +4,7 @@ import { CallbackError } from "mongoose";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
+import checkCitizenship from "../util/check-citizenship";
 import Module from "./abstract/Module";
 import Auth from "./Auth";
 
@@ -132,7 +133,7 @@ export default class ElectionRegistration extends Module {
         
                         if (!runningMate)
                             return i.reply({ content: "That person is not a member of this server.", ephemeral: true });
-                        if (!runningMate.roles.cache.has(config.citizen_role))
+                        if (!await checkCitizenship(runningMate.id))
                             return i.reply({ content: "That person is not a citizen.", ephemeral: true });
                         if (runningMate.id == i.user.id)
                             return i.reply({ content: "Really? You want to run with yourself?", ephemeral: true });
