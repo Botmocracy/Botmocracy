@@ -1,8 +1,9 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import axios from "axios";
-import { CommandInteraction, GuildMemberRoleManager, MessageEmbed, TextChannel } from "discord.js";
+import { CommandInteraction, MessageEmbed, TextChannel } from "discord.js";
 import { request } from "undici";
 import { config } from "..";
+import Account from "../schema/Account";
 import Town from "../schema/Town";
 import Module from "./abstract/Module";
 import Auth from "./Auth";
@@ -61,7 +62,7 @@ export default class Info extends Module {
             subcommands: {
                 get: {
                     executor: async (i: CommandInteraction): Promise<any> => {
-                        await i.deferReply({ ephemeral: true });
+                        await i.deferReply();
                         Town.findOne({ name: i.options.getString("name") }, async (err: any, res: any) => {
                             if (!res || err) {
                                 await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
@@ -86,6 +87,10 @@ export default class Info extends Module {
                 add: {
                     executor: async (i: CommandInteraction): Promise<any> => {
                         await i.deferReply({ ephemeral: true });
+
+                        const account = await Account.findOne({ discordId: i.user.id }).exec();
+                        if (!account) return i.editReply({ content: "I can't find any account data for you. Are you verified? "});
+
                         const townName = i.options.getString("name", true);
 
                         let townData: { [key: string]: string } | undefined = await this.getTownByName(townName);
@@ -119,6 +124,9 @@ export default class Info extends Module {
                         usernames = usernames.map(n => n.toLowerCase());
 
                         if (!usernames.includes(townData["Mayor"].toLowerCase())) return i.editReply({ content: "You don't seem to own this town." });
+
+                        account.citizen = true;
+                        account.save();
 
                         await town.save();
                         await i.editReply({ content: "Successfully added town!" });

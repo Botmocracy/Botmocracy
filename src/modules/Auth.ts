@@ -5,7 +5,6 @@ import { config } from "..";
 import Account from "../schema/Account";
 import Module from "./abstract/Module";
 
-
 export default class Auth extends Module {
     name = "Auth";
 
@@ -14,16 +13,6 @@ export default class Auth extends Module {
     onEnable(): void {
         this.logger.info("Enabled");
         this.client?.on('guildMemberAdd', (member) => this.onMemberJoin(member));
-        this.client?.on('guildMemberUpdate', this.onRoleAdd);
-    }
-
-    async onRoleAdd(oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) {
-        if(oldMember.guild.id != config.guild) return;
-
-        const roles = newMember.roles.cache.map(r => r.id);
-        if(!(await Account.exists({discordId: newMember.id}))) return;
-
-        await Account.updateOne({discordId: newMember.id}, {roles: roles});
     }
 
     async getMinecraftNameFromDiscordId(id: string) {
@@ -85,7 +74,7 @@ export default class Auth extends Module {
         const roles = (account.roles as unknown as Array<string>);
         roles.forEach((value) => {
             const role = member.guild.roles.cache.get(value);
-            member.roles.add(role!);
+            if (role) member.roles.add(role);
         });
     }
 
@@ -132,12 +121,12 @@ export default class Auth extends Module {
                     const role = i.guild.roles.cache.get(config.verified_role);
                     member?.roles.add((role as Role));
 
+                    if(await Account.exists({discordId: i.user.id}).exec()) await Account.deleteOne({discordId: i.user.id}).exec();
+                    const acnt = new Account({discordId: i.user.id, minecraftUUID: uuid });
+                    await acnt.save();
+
                     i.editReply({ content: "Verified!" });
                     (this.client?.channels.cache.get(config.welcome_channel)! as TextChannel).send(`${i.user} welcome! Check out <#995567687080091769> for information on joining.`);
-                    if(await Account.exists({discordId: i.user.id}).exec()) await Account.deleteOne({discordId: i.user.id}).exec();
-
-                    const acnt = new Account({discordId: i.user.id, minecraftUUID: uuid});
-                    await acnt.save();
                 } else i.editReply({ content: "You do not seem to be an MRT member." });
             }
         }
