@@ -211,11 +211,11 @@ export default class ElectionManager extends Module {
 
         // There is a possibility that they will have left the server
         if (presidentMember != undefined && presidentMember.roles != undefined) {
-            presidentMember.roles.add([presidentRole!, governmentRole!]);
+            await presidentMember.roles.add([presidentRole!, governmentRole!]);
 
         }
         if (vicePresidentMember != undefined && vicePresidentMember.roles != undefined) {
-            vicePresidentMember.roles.add([vicePresidentRole!, governmentRole!]);
+            await vicePresidentMember.roles.add([vicePresidentRole!, governmentRole!]);
         }
 
         this.scheduleNextElection().then(nextElectionTime => {
@@ -224,6 +224,9 @@ export default class ElectionManager extends Module {
                 `The next election process has been scheduled to begin at ${this.timestamp(nextElectionTime)}.`
             ].join("\n"))
         }).catch(err => this.logger.error(err))
+
+        const governmentChatChannel: TextChannel = this.client!.channels.cache.get(config.government_chat_channel) as TextChannel;
+        if (governmentChatChannel) governmentChatChannel.send(`<@${winners[0]}> <@${winners[1]}> Welcome! You may want to check through each channel to ensure that the last government haven't given themselves any special permissions :wink:`);
     }
 
     async scheduleNextElection(): Promise<number> {
