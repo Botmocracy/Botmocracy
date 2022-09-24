@@ -62,7 +62,7 @@ export default class Info extends Module {
             subcommands: {
                 get: {
                     executor: async (i: CommandInteraction): Promise<any> => {
-                        await i.deferReply();
+                        await i.deferReply({ ephemeral: true });
                         Town.findOne({ name: i.options.getString("name") }, async (err: any, res: any) => {
                             if (!res || err) {
                                 await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
