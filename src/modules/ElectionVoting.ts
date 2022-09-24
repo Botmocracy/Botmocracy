@@ -182,6 +182,9 @@ export default class ElectionVoting extends Module {
     }
 
     async confirmSubmitVote(i: ButtonInteraction) {
+        // Just in case they're somehow decitizened after initiating their vote
+        if (!await checkCitizenship(i.user.id)) return i.update({ content: "You must be a citizen to vote.", components: [] });
+
         const electionPhase = await ElectionInfo.findOne().exec();
         if (electionPhase?.currentPhase != 2) return i.update({ content: "Voting is not currently open.", components: [] });
 
