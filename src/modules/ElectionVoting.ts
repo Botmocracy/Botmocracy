@@ -94,7 +94,7 @@ export default class ElectionVoting extends Module {
             const pageStartPreference = page * 4;
             let pageEndPreference = pageStartPreference + 3;
 
-            if (candidates.length < pageEndPreference) pageEndPreference = candidates.length - 1;
+            if (candidates.length <= pageEndPreference) pageEndPreference = candidates.length - 1;
 
             let userDraftBallot: (string | null)[] = [];
             if (this.draftBallots.get(user.id)) userDraftBallot = this.draftBallots.get(user.id)!;
