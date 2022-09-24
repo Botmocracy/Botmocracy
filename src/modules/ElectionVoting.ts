@@ -73,7 +73,7 @@ export default class ElectionVoting extends Module {
             }
 
             const electionPhase = await ElectionInfo.findOne().exec();
-            if (electionPhase?.currentPhase != 2) res({ content: "Voting is not currently open." });
+            if (electionPhase?.currentPhase != 2) res({ content: "Voting is not currently open.", components: [] });
 
             const candidates = await ElectionCandidate.find().exec();
             const candidatesFormattedAsMenuOptions: Array<MessageSelectOptionData> = [];

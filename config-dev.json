@@ -6,7 +6,7 @@
     "president_role": "992102898630672435",
     "vice_president_role": "992103024686284891",
     "government_role": "992709892269940787",
-    "time_between_elections": "4m",
+    "time_between_elections": "3m",
     "election_registration_period": "30s",
     "election_vote_period": "30s",
     "time_between_counts": "5s",
