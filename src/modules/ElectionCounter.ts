@@ -26,6 +26,7 @@ export default class ElectionCounter extends Module {
     }
 
     async commenceCount() {
+        this.countNumber = 0;
         this.votes = {};
         this.candidates = (await ElectionCandidate.find().exec()).map(c => c.discordId!);
 
