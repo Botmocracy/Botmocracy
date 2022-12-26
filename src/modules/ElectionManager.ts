@@ -188,7 +188,7 @@ export default class ElectionManager extends Module {
         }
 
         for (const member of guild?.members.cache.values()!) {
-            if (member.roles.cache.hasAny(...electedRoleIds)) await member.roles.remove(electedRoleIds, "Transfer of power");
+            if (member.roles.cache.hasAny(...electedRoleIds) && !member.user.bot) await member.roles.remove(electedRoleIds, "Transfer of power");
         }
 
         const winners = (electionInfo.winners! as unknown as string[]); // Already did this...fucking mongoose
