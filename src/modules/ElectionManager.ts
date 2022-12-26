@@ -172,36 +172,23 @@ export default class ElectionManager extends Module {
         const vicePresidentRole = await guild?.roles.fetch(config.vice_president_role)!;
         const governmentRole = await guild?.roles.fetch(config.government_role)!;
 
+        const electedRoleIds = [presidentRole!.id, vicePresidentRole!.id, governmentRole!.id];
+
         await guild?.members.fetch(); // Do the cache things
 
-        for (const member of Array.from(governmentRole!.members.values())) {
-            const account = await Account.findOne({discordId: member.id}).exec();
-            if(account) {
-                const newRoles = (account.roles as unknown as Array<string>).filter(role => role != governmentRole!.id);
-                await Account.updateOne({discordId: member.id}, {roles: newRoles});
+        for (const account of await Account.find()) {
+            const newRoles = (account.roles as unknown as Array<string>).filter(role => !electedRoleIds.includes(role));
+
+            const member = guild?.members.cache.get(account.discordId!);
+            if (member && member.roles.cache.hasAny(...electedRoleIds)) {
+                await member.roles.remove(electedRoleIds, "Transfer of power");
             }
 
-            await member.roles.remove(governmentRole!.id);
+            if (account.roles as unknown as string[] != newRoles) await Account.updateOne({discordId: account.discordId}, {roles: newRoles});
         }
 
-        for (const member of Array.from(presidentRole!.members.values())) {
-            const account = await Account.findOne({discordId: member.id}).exec();
-            if(account) {
-                const newRoles = (account.roles as unknown as Array<string>).filter(role => role != presidentRole!.id);
-                await Account.updateOne({discordId: member.id}, {roles: newRoles});
-            }
-
-            await member.roles.remove(presidentRole!.id);
-        }
-
-        for (const member of Array.from(vicePresidentRole!.members.values())) {
-            const account = await Account.findOne({discordId: member.id}).exec();
-            if(account) {
-                const newRoles = (account.roles as unknown as Array<string>).filter(role => role != vicePresidentRole!.id);
-                await Account.updateOne({discordId: member.id}, {roles: newRoles});
-            }
-
-            await member.roles.remove(vicePresidentRole!.id);
+        for (const member of guild?.members.cache.values()!) {
+            if (member.roles.cache.hasAny(...electedRoleIds)) await member.roles.remove(electedRoleIds, "Transfer of power");
         }
 
         const winners = (electionInfo.winners! as unknown as string[]); // Already did this...fucking mongoose
