@@ -56,6 +56,11 @@ export default class Admin extends Module {
                         i.reply({content: `Something went wrong when doing git pull: ${err.message}`, ephemeral: true});
                     }
                 });
+                exec("npm install", (err, stdout, stderr) => {
+                    if(err != null) {
+                        i.reply({content: `Something went wrong when doing npm install: ${err.message}`, ephemeral: true});
+                    }
+                });
                 i.client.user?.setStatus("invisible"); // So we can see when it comes back online
                 await i.reply({ content: "Restarting", ephemeral: true });
                 process.exit(0);
