@@ -34,7 +34,7 @@ export default class DiscordLogger extends Module {
                 logMessageBuilder += "```";
                 this.sendMessage(logMessageBuilder);
             }
-        }, 10000)
+        }, 2000)
     }
 
     sendMessage(message: string) {
