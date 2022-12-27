@@ -50,6 +50,8 @@ export default class Auth extends Module {
         let res: string[] = [];
         data.forEach((player: any) => {
             res.push(player['Username']);
+            res.push(...player["Temporary Usernames"].split(",").map((n : string) => n.trim()));
+            res.push(...player["Former Usernames"].split(",").map((n : string) => n.trim()));
         });
 
         return res;
