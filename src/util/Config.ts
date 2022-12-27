@@ -22,5 +22,6 @@ export default interface Config {
     restricted_permissions: PermissionString[],
     restricted_permissions_allowed_roles: RoleResolvable[],
     role_audit_interval: string,
-    government_chat_channel: string;
+    government_chat_channel: string,
+    logs_channel: string
 }
