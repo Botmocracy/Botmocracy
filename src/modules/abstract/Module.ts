@@ -43,7 +43,8 @@ export default class Module {
             const command = this.slashCommands[i.commandName]
             if (!command) return;
 
-            this.logger.info(`Processing command ${i.commandName}${i.options.getSubcommand(false) ? " " + i.options.getSubcommand(false) : ""} with arguments ${i.options.data[0].options?.map(o => `${o.name}:${o.value}`).join(" ")} from ${i.user.tag}`);
+            const data = i.options.data[0] || i.options.data; // Maybe is subcommand
+            this.logger.info(`Processing command ${i.commandName}${i.options.getSubcommand(false) ? " " + i.options.getSubcommand(false) : ""} with arguments ${data.options?.map(o => `${o.name}:${o.value}`).join(" ")} from ${i.user.tag}`);
 
             try {
                 if ('subcommands' in command) {
