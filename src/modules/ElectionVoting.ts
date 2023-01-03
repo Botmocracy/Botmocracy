@@ -53,7 +53,7 @@ export default class ElectionVoting extends Module {
                 [
                     `**Important information regarding voting:** (Please read)`,
                     `- Votes are counted using the [Alternate Vote (AV) method](<https://www.youtube.com/watch?v=3Y3jE3B8HsE>).`,
-                    `- You may rank as many or as few candidates as you like, as long as you select at least one.`,
+                    `- You may rank as many or as few candidates as you like, as long as you select at least one. It is, however, recommended to rank **all** candidates (except one, if you wish) as your vote will be more effective this way.`,
                     `- You may change your vote at any time up until voting closes by clicking the vote button again, selecting your new preferences and saving.`,
                     `- Your vote will not be saved until you have navigated to the last page of the ballot, clicked on the save button and confirmed your preferences.`
                 ].join("\n"),
