@@ -200,5 +200,6 @@ export default class ElectionVoting extends Module {
         await vote.save();
 
         i.update({ content: "Saved! Thanks for voting!", components: [] });
+        this.logger.info("Saved vote for " + i.user.tag);
     }
 }
