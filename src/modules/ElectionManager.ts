@@ -10,6 +10,7 @@ import { ElectionPhase } from "../util/ElectionPhase";
 import Module from "./abstract/Module";
 import ElectionCounter from "./ElectionCounter";
 import ElectionVoting from "./ElectionVoting";
+import RoleAudit from "./RoleAudit";
 
 export default class ElectionManager extends Module {
     name = "ElectionManager";
@@ -22,6 +23,7 @@ export default class ElectionManager extends Module {
 
     counter: ElectionCounter | undefined;
     votingHandler: ElectionVoting | undefined;
+    roleAuditor: RoleAudit | undefined;
 
     timeouts: Array<lt.Timeout> = [];
 
@@ -60,6 +62,7 @@ export default class ElectionManager extends Module {
     async onModulesLoaded(modules: Collection<string, Module>) {
         this.counter = modules.get("ElectionCounter") as ElectionCounter;
         this.votingHandler = modules.get("ElectionVoting") as ElectionVoting;
+        this.roleAuditor = modules.get("RoleAudit") as RoleAudit;
 
         if (process.env.dev) {
             const electionInfo = new ElectionInfo({
@@ -191,6 +194,8 @@ export default class ElectionManager extends Module {
             if (member.roles.cache.hasAny(...electedRoleIds) && !member.user.bot) await member.roles.remove(electedRoleIds, "Transfer of power");
         }
 
+        await this.roleAuditor?.auditRoles(); // In case anything sneaky was going on
+
         const winners = (electionInfo.winners! as unknown as string[]); // Already did this...fucking mongoose
 
         const presidentMember = await guild?.members.fetch(winners[0]);
@@ -198,11 +203,11 @@ export default class ElectionManager extends Module {
 
         // There is a possibility that they will have left the server
         if (presidentMember != undefined && presidentMember.roles != undefined) {
-            await presidentMember.roles.add([presidentRole!, governmentRole!]);
+            await presidentMember.roles.add([presidentRole!, governmentRole!], "Transfer of power");
 
         }
         if (vicePresidentMember != undefined && vicePresidentMember.roles != undefined) {
-            await vicePresidentMember.roles.add([vicePresidentRole!, governmentRole!]);
+            await vicePresidentMember.roles.add([vicePresidentRole!, governmentRole!], "Transfer of power");
         }
 
         this.scheduleNextElection().then(nextElectionTime => {
