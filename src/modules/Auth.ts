@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import axios from 'axios';
-import { CommandInteraction, GuildMember, PartialGuildMember, Role, TextChannel } from "discord.js";
+import { CommandInteraction, GuildMember, PartialGuildMember, Role, RoleResolvable, TextChannel } from "discord.js";
 import { config } from "..";
 import Account from "../schema/Account";
 import Module from "./abstract/Module";
@@ -68,16 +68,20 @@ export default class Auth extends Module {
 
     async onMemberJoin(member: GuildMember){
         const allowedGuilds = [config.guild]
-        if(!allowedGuilds.includes(member.guild.id)) return;
+        if (!allowedGuilds.includes(member.guild.id)) return;
 
         const account = await Account.findOne({discordId: member.id});
-        if(!account) return;
+        if (!account) return;
 
         const roles = (account.roles as unknown as Array<string>);
+        await member.guild.roles.fetch();
+        let rolesToAdd : RoleResolvable[] = [];
         roles.forEach((value) => {
             const role = member.guild.roles.cache.get(value);
-            if (role) member.roles.add(role);
+            if (role) rolesToAdd.push(role);
         });
+
+        if (roles.length > 0) member.roles.add(rolesToAdd);
     }
 
     slashCommands = {
