@@ -2,6 +2,7 @@ import { Collection, PermissionString, Role, TextChannel } from "discord.js";
 import timestring from "timestring";
 import { config } from "..";
 import Account from "../schema/Account";
+import wait from "../util/wait";
 import Module from "./abstract/Module";
 
 // This is such a mess and I do not care
@@ -16,22 +17,23 @@ export default class RoleAudit extends Module {
         // Check for special roles being deleted
 
         this.client?.on("roleDelete", async role => {
-            setTimeout(async () => { // Might take a sec to show in audit logs
-                const auditLogs = await role.guild.fetchAuditLogs({
-                    type: "ROLE_DELETE"
-                })
-                
-                const log = auditLogs.entries.first();
-    
-                if (!log?.executor || !config.restricted_permissions_allowed_roles.includes(role.id) || role.id != log.target!.id) return;
+            await wait(1000);
 
-                const member = role.guild.members.resolve(log.executor);
+            const auditLogs = await role.guild.fetchAuditLogs({
+                type: "ROLE_DELETE"
+            })
 
-                if (!member) return;
+            const log = auditLogs.entries.first();
 
-                member.timeout(12 * 60 * 60 * 1000, "Deleted protected role");
-                (this.client?.channels.cache.get(config.logs_channel) as TextChannel)!.send("@everyone a protected role was deleted.");
-            }, 1000);
+            if (!log?.executor || !config.restricted_permissions_allowed_roles.includes(role.id) || role.id != log.target!.id) return;
+
+            const member = role.guild.members.resolve(log.executor);
+
+            if (!member) return;
+
+            member.timeout(12 * 60 * 60 * 1000, "Deleted protected role");
+            (this.client?.channels.cache.get(config.logs_channel) as TextChannel)!.send("@everyone a protected role was deleted.");
+
         })
     }
 
