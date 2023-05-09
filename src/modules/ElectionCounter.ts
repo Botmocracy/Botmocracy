@@ -6,7 +6,7 @@ import { formatArrayValuesAsHumanReadableString, getNextNonEmptyIndex } from "..
 import wait from "../util/wait";
 import Module from "./abstract/Module";
 import ElectionManager from "./ElectionManager";
-import timestring = require("timestring");
+import timestring from  "timestring";
 
 export default class ElectionCounter extends Module {
     name = "ElectionCounter";
