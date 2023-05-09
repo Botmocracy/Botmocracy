@@ -1,4 +1,4 @@
-import { CacheType, Client, CommandInteraction, GuildMemberRoleManager } from "discord.js";
+import { CacheType, Client, ChatInputCommandInteraction, GuildMemberRoleManager } from "discord.js";
 import { CommandOptions, SubcommandOptions } from "../../util/CommandOptions";
 import Logger from "../../util/Logger";
 import { config } from "../..";
@@ -10,7 +10,7 @@ export default class Module {
     logger : Logger = new Logger("");
     client: Client<true> | null = null; // |null is required bcs of typescript
     
-    async handleCommand(command: Omit<CommandOptions, "cmdBuilder">, i: CommandInteraction<CacheType>) {
+    async handleCommand(command: Omit<CommandOptions, "cmdBuilder">, i: ChatInputCommandInteraction<CacheType>) {
         // If no permissions specified then we assume executable by everyone and run it
         if (!command.allowedPermissions && !command.allowedRoles) return await command.executor(i);
         if (command.allowedPermissions)
@@ -37,7 +37,7 @@ export default class Module {
         this.client = client;
         this.logger = new Logger(this.name);
         this.client.on("interactionCreate", async i => {
-            if (!i.isCommand()) return;
+            if (!i.isChatInputCommand()) return;
             if (i.guildId != config.guild) return;
             
             const command = this.slashCommands[i.commandName]
@@ -45,7 +45,6 @@ export default class Module {
 
             const data = i.options.data[0] || i.options.data; // Maybe is subcommand
             this.logger.info(`Processing command ${i.commandName}${i.options.getSubcommand(false) ? " " + i.options.getSubcommand(false) : ""} with arguments ${data.options?.map(o => `${o.name}:${o.value}`).join(" ")} from ${i.user.tag}`);
-
             try {
                 if ('subcommands' in command) {
                     const subcommandName = i.options.getSubcommand(false);

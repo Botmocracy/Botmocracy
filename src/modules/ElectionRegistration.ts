@@ -1,12 +1,11 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { ButtonInteraction, CommandInteraction, GuildMember, MessageActionRow, MessageButton, TextChannel } from "discord.js";
+import { ButtonInteraction, GuildMember, ActionRowBuilder, ButtonBuilder, TextChannel, SlashCommandBuilder, ButtonStyle, ChatInputCommandInteraction } from "discord.js";
 import { CallbackError } from "mongoose";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import checkCitizenship from "../util/check-citizenship";
-import Module from "./abstract/Module";
 import Auth from "./Auth";
+import Module from "./abstract/Module";
 
 export default class ElectionRegistration extends Module {
     name = "ElectionRegistration";
@@ -123,7 +122,7 @@ export default class ElectionRegistration extends Module {
             subcommands: {
                 enter: {
                     allowedRoles: [config.citizen_role],
-                    executor: async (i: CommandInteraction) => {
+                    executor: async (i: ChatInputCommandInteraction) => {
                         if (!i.guild) {
                             i.reply({ content: "You can't use this in a DM", ephemeral: true });
                             return;
@@ -140,11 +139,11 @@ export default class ElectionRegistration extends Module {
                         if (runningMate.id == this.client?.user.id)
                             return i.reply({ content: "I don't want to run with you, I'm a bot!", ephemeral: true });
         
-                        const row = new MessageActionRow()
+                        const row = new ActionRowBuilder<ButtonBuilder>()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId(`confirmcandidacy-${i.user.id}-${runningMate.id}`)
-                                    .setStyle("SUCCESS")
+                                    .setStyle(ButtonStyle.Success)
                                     .setLabel("Confirm")
                             );
         
@@ -157,7 +156,7 @@ export default class ElectionRegistration extends Module {
                 },
                 withdraw: {
                     allowedRoles: [config.citizen_role],
-                    executor: async (i: CommandInteraction) => {
+                    executor: async (i: ChatInputCommandInteraction) => {
                         const electionInfo = await ElectionInfo.findOne().exec();
                         if (electionInfo?.currentPhase == 0) return i.reply({ content: "There isn't currently an election running.", ephemeral: true });
         
@@ -169,11 +168,11 @@ export default class ElectionRegistration extends Module {
         
                         if (!runningAsPrimary && !runningAsSecondary) return i.reply({ content: "You don't seem to be running with that person.", ephemeral: true });
         
-                        const row = new MessageActionRow()
+                        const row = new ActionRowBuilder<ButtonBuilder>()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId(`confirmwithdrawal-${i.user.id}-${runningWith.id}`)
-                                    .setStyle("DANGER")
+                                    .setStyle(ButtonStyle.Danger)
                                     .setLabel("Confirm")
                             );
         
@@ -185,7 +184,7 @@ export default class ElectionRegistration extends Module {
                     }
                 },
                 listrunning: {
-                    executor: async (i: CommandInteraction) => {
+                    executor: async (i: ChatInputCommandInteraction) => {
                         const candidates = await ElectionCandidate.find().exec();
         
                         if (!candidates) {

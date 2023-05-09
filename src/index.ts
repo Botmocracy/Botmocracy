@@ -2,9 +2,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-import { REST } from "@discordjs/rest";
-import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
-import { Client, Intents } from "discord.js";
+import { Client, IntentsBitField, REST, RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord.js";
 import { readdirSync, readFileSync } from "fs";
 import mongoose from 'mongoose';
 import Module from "./modules/abstract/Module";
@@ -17,10 +15,10 @@ export const config: Config = JSON.parse(readFileSync(configFile).toString());
 
 mongoose.connect((process.env.MONGO_STRING as string));
 
-const intents = new Intents();
-intents.add(Intents.FLAGS.GUILD_MESSAGES);
-intents.add(Intents.FLAGS.GUILDS);
-intents.add(Intents.FLAGS.GUILD_MEMBERS);
+const intents = new IntentsBitField();
+intents.add(IntentsBitField.Flags.GuildMessages);
+intents.add(IntentsBitField.Flags.Guilds);
+intents.add(IntentsBitField.Flags.GuildMembers);
 
 const client = new Client({ intents: intents, allowedMentions: { parse: config.allowed_mentions } });
 const logger = new Logger("Index");

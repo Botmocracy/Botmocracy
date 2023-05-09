@@ -1,4 +1,4 @@
-import { ButtonInteraction, GuildMemberRoleManager, InteractionUpdateOptions, MessageActionRow, MessageButton, MessageSelectMenu, MessageSelectOptionData, SelectMenuInteraction, User } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, SelectMenuComponentOptionData, SelectMenuInteraction, StringSelectMenuBuilder, User } from "discord.js";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
@@ -41,12 +41,12 @@ export default class ElectionVoting extends Module {
         const electionPhase = await ElectionInfo.findOne().exec();
         if (electionPhase?.currentPhase != 2) return i.reply({ content: "Voting is not currently open.", ephemeral: true });
 
-        const row = new MessageActionRow()
+        const row = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId("electionvotingpage-0")
                     .setLabel("I understand. Proceed.")
-                    .setStyle("PRIMARY")
+                    .setStyle(ButtonStyle.Primary)
             );
         i.reply({
             content:
@@ -76,7 +76,7 @@ export default class ElectionVoting extends Module {
             if (electionPhase?.currentPhase != 2) res({ content: "Voting is not currently open.", components: [] });
 
             const candidates = await ElectionCandidate.find().exec();
-            const candidatesFormattedAsMenuOptions: Array<MessageSelectOptionData> = [];
+            const candidatesFormattedAsMenuOptions: Array<SelectMenuComponentOptionData> = [];
             for (const candidate of candidates) {
                 candidatesFormattedAsMenuOptions.push({
                     label: `${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!)} (Pres), ${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!)} (VP)`,
@@ -101,8 +101,8 @@ export default class ElectionVoting extends Module {
 
             for (let j = pageStartPreference; j <= pageEndPreference; j++) {
                 votingMessageComponents.push(
-                    new MessageActionRow().addComponents(
-                        new MessageSelectMenu()
+                    new ActionRowBuilder().addComponents(
+                        new StringSelectMenuBuilder()
                             .setCustomId("electionpreference-" + j)
                             .setPlaceholder("Preference " + (j + 1) + (
                                 userDraftBallot && userDraftBallot[j]
@@ -117,25 +117,25 @@ export default class ElectionVoting extends Module {
             const buttonRowComponents = [];
 
             if (page > 0) buttonRowComponents.push(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId(`electionvotingpage-${page - 1}`)
                     .setLabel("Previous Page")
-                    .setStyle("PRIMARY")
+                    .setStyle(ButtonStyle.Primary)
             );
             if (pageEndPreference != candidates.length - 1) buttonRowComponents.push(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId(`electionvotingpage-${page + 1}`)
                     .setLabel("Next Page")
-                    .setStyle("PRIMARY")
+                    .setStyle(ButtonStyle.Primary)
             );
             else buttonRowComponents.push(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId(`submitelectionvote`)
                     .setLabel("Submit Vote")
-                    .setStyle("SUCCESS")
+                    .setStyle(ButtonStyle.Success)
             );
 
-            const buttonRow = new MessageActionRow().addComponents(buttonRowComponents);
+            const buttonRow = new ActionRowBuilder().addComponents(buttonRowComponents);
             votingMessageComponents.push(buttonRow);
 
             res({ content: `**Election ballot page ${page + 1}/${Math.ceil(candidates.length / 4)}**`, components: votingMessageComponents, ephemeral: true });
@@ -156,15 +156,15 @@ export default class ElectionVoting extends Module {
     async submitVote(i: ButtonInteraction) {
         const candidates = await ElectionCandidate.find().exec();
 
-        const row = new MessageActionRow().addComponents(
-            new MessageButton()
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
                 .setCustomId("electionvotingpage-0")
                 .setLabel("This is Wrong")
-                .setStyle("DANGER"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Danger),
+            new ButtonBuilder()
                 .setCustomId("confirmsubmitelectionvote")
                 .setLabel("This is Correct")
-                .setStyle("SUCCESS")
+                .setStyle(ButtonStyle.Success)
         )
 
         let outputMessage = "**PLEASE CONFIRM THAT THE BELOW VOTE IS CORRECT:**";

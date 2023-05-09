@@ -1,4 +1,4 @@
-import { Collection, PermissionString, Role, TextChannel } from "discord.js";
+import { AuditLogEvent, Collection, PermissionsString, Role, TextChannel } from "discord.js";
 import timestring from "timestring";
 import { config } from "..";
 import Account from "../schema/Account";
@@ -20,7 +20,7 @@ export default class RoleAudit extends Module {
             await wait(1000);
 
             const auditLogs = await role.guild.fetchAuditLogs({
-                type: "ROLE_DELETE"
+                type: AuditLogEvent.RoleDelete
             })
 
             const log = auditLogs.entries.first();
@@ -46,7 +46,7 @@ export default class RoleAudit extends Module {
             const roles: Array<Role> = Array.from(rolesCache.keys()).map(k => rolesCache.get(k as string)) as Array<Role>;
             for (const role of roles) {
                 if (config.restricted_permissions_allowed_roles.includes(role.id)) continue;
-                let permissions: PermissionString[] = role.permissions.toArray();
+                let permissions: PermissionsString[] = role.permissions.toArray();
                 let modified: boolean = false;
                 for (const permission of config.restricted_permissions) {
                     if (role.permissions.has(permission, false)) {

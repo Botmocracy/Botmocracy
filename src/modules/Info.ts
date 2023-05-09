@@ -1,12 +1,11 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import axios from "axios";
-import { CommandInteraction, MessageEmbed, TextChannel } from "discord.js";
+import { ChatInputCommandInteraction, Colors, EmbedBuilder, SlashCommandBuilder, TextChannel } from "discord.js";
 import { request } from "undici";
 import { config } from "..";
 import Account from "../schema/Account";
 import Town from "../schema/Town";
-import Module from "./abstract/Module";
 import Auth from "./Auth";
+import Module from "./abstract/Module";
 
 
 export default class Info extends Module {
@@ -61,7 +60,7 @@ export default class Info extends Module {
                 ),
             subcommands: {
                 get: {
-                    executor: async (i: CommandInteraction): Promise<any> => {
+                    executor: async (i: ChatInputCommandInteraction) => {
                         await i.deferReply({ ephemeral: true });
                         Town.findOne({ name: i.options.getString("name") }, async (err: any, res: any) => {
                             if (!res || err) {
@@ -73,19 +72,21 @@ export default class Info extends Module {
                             const depMayor = res['depMayor'];
                             const coords = res['coords'];
 
-                            const embed = new MessageEmbed()
+                            const embed = new EmbedBuilder()
                                 .setTitle(name)
-                                .addField("Mayor", mayor)
-                                .addField("Deputy Mayor", depMayor)
-                                .addField("Coords", coords)
-                                .setColor("BLURPLE");
+                                .addFields([
+                                    {name: "Mayor", value: mayor},
+                                    {name: "Deputy Mayor", value: depMayor},
+                                    {name: "Coords", value: coords}
+                                ])
+                                .setColor(Colors.Blurple);
 
                             await i.editReply({ embeds: [embed] });
                         })
                     }
                 },
                 add: {
-                    executor: async (i: CommandInteraction): Promise<any> => {
+                    executor: async (i: ChatInputCommandInteraction) => {
                         await i.deferReply({ ephemeral: true });
 
                         const account = await Account.findOne({ discordId: i.user.id }).exec();

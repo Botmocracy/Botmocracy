@@ -6,7 +6,10 @@ export function formatArrayValuesAsHumanReadableString(array: Array<unknown>): s
 
 export function getNextNonEmptyIndex(array: Array<unknown | null>, startPoint: string): number | null {
     for (let i in array) {
-        if (parseInt(i) > parseInt(startPoint) && (array[i] != null && array[i] != [])) return parseInt(i);
+        if (parseInt(i) <= parseInt(startPoint)) continue;
+        let ele = array[i];
+        if (ele != null || !Array.isArray(ele)) continue;
+        if ((ele as Array<unknown>).length != 0) return parseInt(i);
     }
     return null;
 }
