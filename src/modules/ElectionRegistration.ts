@@ -82,8 +82,8 @@ export default class ElectionRegistration extends Module {
         const runningAsSecondary = await ElectionCandidate.findOne({ discordId: userIds[1], runningMateDiscordId: userIds[0] });
 
         if (!runningAsPrimary && !runningAsSecondary) return i.reply({ content: "Oops. Looks like something broke.", ephemeral: true });
-        if (runningAsPrimary) runningAsPrimary.remove();
-        if (runningAsSecondary) runningAsSecondary.remove();
+        if (runningAsPrimary) runningAsPrimary.deleteOne();
+        if (runningAsSecondary) runningAsSecondary.deleteOne();
 
         i.update({ content: "Confirmed", components: [] });
 

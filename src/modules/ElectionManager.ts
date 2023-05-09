@@ -85,7 +85,7 @@ export default class ElectionManager extends Module {
         const currentInfo = await ElectionInfo.findOne().exec();
         if (!currentInfo) throw new Error("Unable to update election phase: Info fetch failed");
 
-        await currentInfo.remove();
+        await currentInfo.deleteOne();
 
         const newInfo = new ElectionInfo({
             currentPhase: phase,
@@ -160,7 +160,7 @@ export default class ElectionManager extends Module {
             winners: [elected, runningMate]
         });
 
-        await currentElectionInfo?.delete();
+        await currentElectionInfo?.deleteOne();
         newElectionInfo.save();
     }
 
@@ -236,7 +236,7 @@ export default class ElectionManager extends Module {
 
             if (newElectionInfo.processStartTime!.getTime() < Date.now()) return rej("Election is scheduled for the past. This will not end well.")
 
-            await currentInfo.delete();
+            await currentInfo.deleteOne();
             await newElectionInfo.save();
 
             this.run();
