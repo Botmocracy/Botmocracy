@@ -133,7 +133,7 @@ export default class Auth extends Module {
                     return;
                 }
 
-               await i.deferReply({ ephemeral: true });
+                await i.deferReply({ ephemeral: true });
 
                 const member = i.guild.members.cache.get(i.user.id);
 
