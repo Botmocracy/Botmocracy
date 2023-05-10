@@ -9,7 +9,9 @@ export default class Logger {
 
     // # means private method
     constructLogMessage(level: string, messages: string[]): string {
-        return `${new Date().toUTCString()} ${level}: [${this.name}] ${messages.join(" ")}`;
+        return `${new Date().toUTCString()} ${level}: [${
+            this.name
+        }] ${messages.join(" ")}`;
     }
 
     info(...messages: string[]) {

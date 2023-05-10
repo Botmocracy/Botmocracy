@@ -1,13 +1,18 @@
 /* eslint-disable @typescript-eslint/dot-notation */
 import axios from "axios";
-import { ChatInputCommandInteraction, Colors, EmbedBuilder, SlashCommandBuilder, TextChannel } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    Colors,
+    EmbedBuilder,
+    SlashCommandBuilder,
+    TextChannel,
+} from "discord.js";
 import { request } from "undici";
 import { config } from "..";
 import Account from "../schema/Account";
 import Town from "../schema/Town";
 import Auth from "./Auth";
 import Module from "./abstract/Module";
-
 
 export default class Info extends Module {
     name = "Info";
@@ -18,22 +23,24 @@ export default class Info extends Module {
     }
 
     onModulesLoaded(modules: Map<string, Module>): void {
-        this.auth = (modules.get('Auth') as Auth)
+        this.auth = modules.get("Auth") as Auth;
     }
 
     async getTownByName(name: string) {
-        const result = await request("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World", { maxRedirections: 1 });
-        let fullBody = '';
+        const result = await request(
+            "https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World",
+            { maxRedirections: 1 }
+        );
+        let fullBody = "";
 
         for await (const part of result.body) {
-            fullBody += part
+            fullBody += part;
         }
-
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const towns = JSON.parse(fullBody) as Record<string, any>[];
         for (const townData of towns) {
-            if (townData['Town Name'] == name) {
+            if (townData["Town Name"] == name) {
                 return townData;
             }
         }
@@ -47,100 +54,169 @@ export default class Info extends Module {
             cmdBuilder: new SlashCommandBuilder()
                 .setName("town")
                 .setDescription("Add or get info about a town")
-                .addSubcommand(s => s
-                    .setName("get")
-                    .setDescription("Get info about a town")
-                    .addStringOption(option =>
-                        option.setName("name")
-                            .setDescription("Name of the town")
-                            .setRequired(true)
-                    ))
-                .addSubcommand(s => s
-                    .setName("add")
-                    .setDescription("Add a town")
-                    .addStringOption(o => o.setName("name").setRequired(true).setDescription("The town name"))
+                .addSubcommand((s) =>
+                    s
+                        .setName("get")
+                        .setDescription("Get info about a town")
+                        .addStringOption((option) =>
+                            option
+                                .setName("name")
+                                .setDescription("Name of the town")
+                                .setRequired(true)
+                        )
+                )
+                .addSubcommand((s) =>
+                    s
+                        .setName("add")
+                        .setDescription("Add a town")
+                        .addStringOption((o) =>
+                            o
+                                .setName("name")
+                                .setRequired(true)
+                                .setDescription("The town name")
+                        )
                 ),
             subcommands: {
                 get: {
                     executor: async (i: ChatInputCommandInteraction) => {
-                       await i.deferReply({ ephemeral: true });
-                        const res = await Town.findOne({ name: i.options.getString("name") }).catch(() => null);
+                        await i.deferReply({ ephemeral: true });
+                        const res = await Town.findOne({
+                            name: i.options.getString("name"),
+                        }).catch(() => null);
                         if (!res) {
-                           await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
+                            await i.editReply(
+                                `Invalid town \`${i.options.getString(
+                                    "name"
+                                )}\``
+                            );
                             return;
                         }
-                        const name = res['name']!;
-                        const mayor = res['mayor']!;
-                        const depMayor = res['depMayor'];
-                        const coords = res['coords']!;
+                        const name = res["name"]!;
+                        const mayor = res["mayor"]!;
+                        const depMayor = res["depMayor"];
+                        const coords = res["coords"]!;
 
                         const embed = new EmbedBuilder()
                             .setTitle(name)
                             .addFields([
-                                {name: "Mayor", value: mayor},
-                                {name: "Deputy Mayor", value: depMayor},
-                                {name: "Coords", value: coords}
+                                { name: "Mayor", value: mayor },
+                                { name: "Deputy Mayor", value: depMayor },
+                                { name: "Coords", value: coords },
                             ])
                             .setColor(Colors.Blurple);
 
-                       await i.editReply({ embeds: [embed] });
-                    }
+                        await i.editReply({ embeds: [embed] });
+                    },
                 },
                 add: {
                     executor: async (i: ChatInputCommandInteraction) => {
-                       await i.deferReply({ ephemeral: true });
+                        await i.deferReply({ ephemeral: true });
 
-                        const account = await Account.findOne({ discordId: i.user.id }).exec();
-                        if (!account) return i.editReply({ content: "I can't find any account data for you. Are you verified? "});
+                        const account = await Account.findOne({
+                            discordId: i.user.id,
+                        }).exec();
+                        if (!account)
+                            return i.editReply({
+                                content:
+                                    "I can't find any account data for you. Are you verified? ",
+                            });
 
                         const townName = i.options.getString("name", true);
 
-                        const townData: Record<string, string> | undefined = await this.getTownByName(townName);
-                        if (!townData) return i.editReply({ content: "This town does not exist." });
+                        const townData: Record<string, string> | undefined =
+                            await this.getTownByName(townName);
+                        if (!townData)
+                            return i.editReply({
+                                content: "This town does not exist.",
+                            });
 
-                        if (await Town.findOne({ name: townName }).exec() != null) return i.editReply({ content: "This town is already registered." });
+                        if (
+                            (await Town.findOne({ name: townName }).exec()) !=
+                            null
+                        )
+                            return i.editReply({
+                                content: "This town is already registered.",
+                            });
 
                         const town = new Town({
-                            name: townData['Town Name'],
-                            mayor: townData['Mayor'],
-                            depMayor: townData['Deputy Mayor'],
-                            coords: `${townData['X']} ${townData['Y']} ${townData['Z']}`,
-                            rank: townData['Town Rank']
+                            name: townData["Town Name"],
+                            mayor: townData["Mayor"],
+                            depMayor: townData["Deputy Mayor"],
+                            coords: `${townData["X"]} ${townData["Y"]} ${townData["Z"]}`,
+                            rank: townData["Town Rank"],
                         });
 
-                        const minecraftName = await this.auth?.getMinecraftNameFromDiscordId(i.user.id) ?? "";
+                        const minecraftName =
+                            (await this.auth?.getMinecraftNameFromDiscordId(
+                                i.user.id
+                            )) ?? "";
 
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                        const memberData: Record<string, string>[] = (await axios.get("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members")).data;
+                        const memberData: Record<string, string>[] = (
+                            await axios.get(
+                                "https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members"
+                            )
+                        ).data;
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-                        const executorMemberData = memberData.filter(v =>
-                            v["Username"] == minecraftName ||
-                            v["Temporary Usernames"].split(", ").includes(minecraftName) ||
-                            v["Former Usernames"].split(", ").includes(minecraftName)
+                        const executorMemberData = memberData.filter(
+                            (v) =>
+                                v["Username"] == minecraftName ||
+                                v["Temporary Usernames"]
+                                    .split(", ")
+                                    .includes(minecraftName) ||
+                                v["Former Usernames"]
+                                    .split(", ")
+                                    .includes(minecraftName)
                         );
 
-                        if (!minecraftName || executorMemberData.length == 0) return i.editReply({ content: "I wasn't able to find your member info." });
+                        if (!minecraftName || executorMemberData.length == 0)
+                            return i.editReply({
+                                content:
+                                    "I wasn't able to find your member info.",
+                            });
 
                         let usernames: string[] = [];
                         usernames.push(executorMemberData[0]["Username"]);
-                        usernames.push(...executorMemberData[0]["Temporary Usernames"].split(", "));
-                        usernames.push(...executorMemberData[0]["Former Usernames"].split(", "));
-                        usernames = usernames.map(n => n.toLowerCase());
+                        usernames.push(
+                            ...executorMemberData[0][
+                                "Temporary Usernames"
+                            ].split(", ")
+                        );
+                        usernames.push(
+                            ...executorMemberData[0]["Former Usernames"].split(
+                                ", "
+                            )
+                        );
+                        usernames = usernames.map((n) => n.toLowerCase());
 
-                        if (!usernames.includes(townData["Mayor"].toLowerCase())) return i.editReply({ content: "You don't seem to own this town." });
+                        if (
+                            !usernames.includes(townData["Mayor"].toLowerCase())
+                        )
+                            return i.editReply({
+                                content: "You don't seem to own this town.",
+                            });
 
                         account.citizen = true;
-                       await account.save();
+                        await account.save();
 
-                       await town.save();
-                       await i.editReply({ content: "Successfully added town!" });
-                        const member = await this.client?.guilds.cache.get(config.guild)?.members.fetch(i.user);
-                       await member!.roles.add(config.citizen_role);
-                        const notificationChannel = this.client?.channels.cache.get(config.town_notifications_channel) as TextChannel;
-                       await notificationChannel.send(`${i.user} has joined with **${townName}**!`);
-                    }
-                }
-            }
-        }
-    }
+                        await town.save();
+                        await i.editReply({
+                            content: "Successfully added town!",
+                        });
+                        const member = await this.client?.guilds.cache
+                            .get(config.guild)
+                            ?.members.fetch(i.user);
+                        await member!.roles.add(config.citizen_role);
+                        const notificationChannel =
+                            this.client?.channels.cache.get(
+                                config.town_notifications_channel
+                            ) as TextChannel;
+                        await notificationChannel.send(
+                            `${i.user} has joined with **${townName}**!`
+                        );
+                    },
+                },
+            },
+        },
+    };
 }

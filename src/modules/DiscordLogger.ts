@@ -10,8 +10,8 @@ export default class DiscordLogger extends Module {
     onEnable() {
         this.logger.info("Enabled");
 
-        capcon.startCapture(process.stdout, s => this.messageBuffer.push(s));
-        capcon.startCapture(process.stderr, s => this.messageBuffer.push(s));
+        capcon.startCapture(process.stdout, (s) => this.messageBuffer.push(s));
+        capcon.startCapture(process.stderr, (s) => this.messageBuffer.push(s));
 
         setInterval(() => {
             const builderStart = "```ansi\n";
@@ -34,10 +34,12 @@ export default class DiscordLogger extends Module {
                 logMessageBuilder += "```";
                 void this.sendMessage(logMessageBuilder);
             }
-        }, 2000)
+        }, 2000);
     }
 
     async sendMessage(message: string) {
-       await (this.client?.channels.cache.get(config.logs_channel) as TextChannel)!.send(message);
+        await (this.client?.channels.cache.get(
+            config.logs_channel
+        ) as TextChannel)!.send(message);
     }
 }

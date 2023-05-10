@@ -1,4 +1,14 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, InteractionUpdateOptions, SelectMenuComponentOptionData, SelectMenuInteraction, StringSelectMenuBuilder, User } from "discord.js";
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonInteraction,
+    ButtonStyle,
+    InteractionUpdateOptions,
+    SelectMenuComponentOptionData,
+    SelectMenuInteraction,
+    StringSelectMenuBuilder,
+    User,
+} from "discord.js";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
@@ -17,16 +27,23 @@ export default class ElectionVoting extends Module {
         this.logger.info("Enabled");
 
         this.client?.on("interactionCreate", async (i) => {
-            if(i.guildId != config.guild) return;
+            if (i.guildId != config.guild) return;
             if (i.isButton()) {
-                if (i.customId == "electionvote")await this.startVote(i);
+                if (i.customId == "electionvote") await this.startVote(i);
                 else if (i.customId.startsWith("electionvotingpage")) {
-                   await i.update(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
-                }
-                else if (i.customId == "submitelectionvote")await this.submitVote(i);
-                else if (i.customId == "confirmsubmitelectionvote")await this.confirmSubmitVote(i);
+                    await i.update(
+                        await this.getVotingPage(
+                            parseInt(i.customId.split("-")[1]),
+                            i.user
+                        )
+                    );
+                } else if (i.customId == "submitelectionvote")
+                    await this.submitVote(i);
+                else if (i.customId == "confirmsubmitelectionvote")
+                    await this.confirmSubmitVote(i);
             } else if (i.isStringSelectMenu()) {
-                if (i.customId.startsWith("electionpreference"))await this.recordVotePreference(i);
+                if (i.customId.startsWith("electionpreference"))
+                    await this.recordVotePreference(i);
             }
         });
     }
@@ -36,120 +53,162 @@ export default class ElectionVoting extends Module {
     }
 
     async startVote(i: ButtonInteraction) {
-        if (!await checkCitizenship(i.user.id)) return i.reply({ content: "You must be a citizen to vote.", ephemeral: true });
-            
-        const electionPhase = await ElectionInfo.findOne().exec();
-        if (electionPhase?.currentPhase != 2) return i.reply({ content: "Voting is not currently open.", ephemeral: true });
+        if (!(await checkCitizenship(i.user.id)))
+            return i.reply({
+                content: "You must be a citizen to vote.",
+                ephemeral: true,
+            });
 
-        const row = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId("electionvotingpage-0")
-                    .setLabel("I understand. Proceed.")
-                    .setStyle(ButtonStyle.Primary)
-            );
-       await i.reply({
-            content:
-                [
-                    `**Important information regarding voting:** (Please read)`,
-                    `- Votes are counted using the [Alternate Vote (AV) method](<https://www.youtube.com/watch?v=3Y3jE3B8HsE>).`,
-                    `- You may rank as many or as few candidates as you like, as long as you select at least one. It is, however, recommended to rank **all** candidates (except one, if you wish) as your vote will be more effective this way.`,
-                    `- You may change your vote at any time up until voting closes by clicking the vote button again, selecting your new preferences and saving.`,
-                    `- Your vote will not be saved until you have navigated to the last page of the ballot, clicked on the save button and confirmed your preferences.`
-                ].join("\n"),
+        const electionPhase = await ElectionInfo.findOne().exec();
+        if (electionPhase?.currentPhase != 2)
+            return i.reply({
+                content: "Voting is not currently open.",
+                ephemeral: true,
+            });
+
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+                .setCustomId("electionvotingpage-0")
+                .setLabel("I understand. Proceed.")
+                .setStyle(ButtonStyle.Primary)
+        );
+        await i.reply({
+            content: [
+                `**Important information regarding voting:** (Please read)`,
+                `- Votes are counted using the [Alternate Vote (AV) method](<https://www.youtube.com/watch?v=3Y3jE3B8HsE>).`,
+                `- You may rank as many or as few candidates as you like, as long as you select at least one. It is, however, recommended to rank **all** candidates (except one, if you wish) as your vote will be more effective this way.`,
+                `- You may change your vote at any time up until voting closes by clicking the vote button again, selecting your new preferences and saving.`,
+                `- Your vote will not be saved until you have navigated to the last page of the ballot, clicked on the save button and confirmed your preferences.`,
+            ].join("\n"),
             ephemeral: true,
-            components: [row]
+            components: [row],
         });
     }
 
-    async getVotingPage(page: number, user: User): Promise<InteractionUpdateOptions & { ephemeral?: boolean }> {
-
-            // See if they've submitted a vote before and if so fill in the values
-            if (page == 0 && !this.draftBallots.get(user.id)) {
-                const previousVote = await ElectionVote.findOne({ discordId: user.id }).exec();
-                if (previousVote) {
-                    this.draftBallots.set(user.id, previousVote.preferences! as unknown as string[]);
-                }
+    async getVotingPage(
+        page: number,
+        user: User
+    ): Promise<InteractionUpdateOptions & { ephemeral?: boolean }> {
+        // See if they've submitted a vote before and if so fill in the values
+        if (page == 0 && !this.draftBallots.get(user.id)) {
+            const previousVote = await ElectionVote.findOne({
+                discordId: user.id,
+            }).exec();
+            if (previousVote) {
+                this.draftBallots.set(
+                    user.id,
+                    previousVote.preferences! as unknown as string[]
+                );
             }
+        }
 
-            const electionPhase = await ElectionInfo.findOne().exec();
-            if (electionPhase?.currentPhase != 2) return { content: "Voting is not currently open.", components: [] };
+        const electionPhase = await ElectionInfo.findOne().exec();
+        if (electionPhase?.currentPhase != 2)
+            return { content: "Voting is not currently open.", components: [] };
 
-            const candidates = await ElectionCandidate.find().exec();
-            const candidatesFormattedAsMenuOptions: SelectMenuComponentOptionData[] = [];
-            for (const candidate of candidates) {
-                candidatesFormattedAsMenuOptions.push({
-                    label: `${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!)} (Pres), ${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!)} (VP)`,
-                    value: candidate.discordId!
-                });
-            }
-
+        const candidates = await ElectionCandidate.find().exec();
+        const candidatesFormattedAsMenuOptions: SelectMenuComponentOptionData[] =
+            [];
+        for (const candidate of candidates) {
             candidatesFormattedAsMenuOptions.push({
-                label: "No preference",
-                value: "no_preference"
-            })
+                label: `${await this.authModule.getMinecraftOrDiscordName(
+                    candidate.discordId!
+                )} (Pres), ${await this.authModule.getMinecraftOrDiscordName(
+                    candidate.runningMateDiscordId!
+                )} (VP)`,
+                value: candidate.discordId!,
+            });
+        }
 
-            const votingMessageComponents: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] = [];
+        candidatesFormattedAsMenuOptions.push({
+            label: "No preference",
+            value: "no_preference",
+        });
 
-            const pageStartPreference = page * 4;
-            let pageEndPreference = pageStartPreference + 3;
+        const votingMessageComponents: ActionRowBuilder<
+            StringSelectMenuBuilder | ButtonBuilder
+        >[] = [];
 
-            if (candidates.length <= pageEndPreference) pageEndPreference = candidates.length - 1;
+        const pageStartPreference = page * 4;
+        let pageEndPreference = pageStartPreference + 3;
 
-            let userDraftBallot: (string | null)[] = [];
-            if (this.draftBallots.get(user.id)) userDraftBallot = this.draftBallots.get(user.id)!;
+        if (candidates.length <= pageEndPreference)
+            pageEndPreference = candidates.length - 1;
 
-            for (let j = pageStartPreference; j <= pageEndPreference; j++) {
-                votingMessageComponents.push(
-                    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-                        new StringSelectMenuBuilder()
-                            .setCustomId("electionpreference-" + j)
-                            .setPlaceholder("Preference " + (j + 1) + (
-                                userDraftBallot[j]
-                                    ? ": " + candidatesFormattedAsMenuOptions.filter(c => c.value == userDraftBallot[j])[0].label
-                                    : ""
-                            ))
-                            .addOptions(candidatesFormattedAsMenuOptions)
-                    )
+        let userDraftBallot: (string | null)[] = [];
+        if (this.draftBallots.get(user.id))
+            userDraftBallot = this.draftBallots.get(user.id)!;
+
+        for (let j = pageStartPreference; j <= pageEndPreference; j++) {
+            votingMessageComponents.push(
+                new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+                    new StringSelectMenuBuilder()
+                        .setCustomId("electionpreference-" + j)
+                        .setPlaceholder(
+                            "Preference " +
+                                (j + 1) +
+                                (userDraftBallot[j]
+                                    ? ": " +
+                                      candidatesFormattedAsMenuOptions.filter(
+                                          (c) => c.value == userDraftBallot[j]
+                                      )[0].label
+                                    : "")
+                        )
+                        .addOptions(candidatesFormattedAsMenuOptions)
                 )
-            }
+            );
+        }
 
-            const buttonRowComponents: ButtonBuilder[] = [];
+        const buttonRowComponents: ButtonBuilder[] = [];
 
-            if (page > 0) buttonRowComponents.push(
+        if (page > 0)
+            buttonRowComponents.push(
                 new ButtonBuilder()
                     .setCustomId(`electionvotingpage-${page - 1}`)
                     .setLabel("Previous Page")
                     .setStyle(ButtonStyle.Primary)
             );
-            if (pageEndPreference != candidates.length - 1) buttonRowComponents.push(
+        if (pageEndPreference != candidates.length - 1)
+            buttonRowComponents.push(
                 new ButtonBuilder()
                     .setCustomId(`electionvotingpage-${page + 1}`)
                     .setLabel("Next Page")
                     .setStyle(ButtonStyle.Primary)
             );
-            else buttonRowComponents.push(
+        else
+            buttonRowComponents.push(
                 new ButtonBuilder()
                     .setCustomId(`submitelectionvote`)
                     .setLabel("Submit Vote")
                     .setStyle(ButtonStyle.Success)
             );
 
-            const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(buttonRowComponents);
-            votingMessageComponents.push(buttonRow);
+        const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            buttonRowComponents
+        );
+        votingMessageComponents.push(buttonRow);
 
-            return { content: `**Election ballot page ${page + 1}/${Math.ceil(candidates.length / 4)}**`, components: votingMessageComponents, ephemeral: true };
+        return {
+            content: `**Election ballot page ${page + 1}/${Math.ceil(
+                candidates.length / 4
+            )}**`,
+            components: votingMessageComponents,
+            ephemeral: true,
+        };
     }
 
     async recordVotePreference(i: SelectMenuInteraction) {
         const preference = parseInt(i.customId.split("-")[1]);
         const numberOfCandidates = (await ElectionInfo.find().exec()).length;
-        const ballot = this.draftBallots.get(i.user.id) ? this.draftBallots.get(i.user.id)! : Array<string | null>(numberOfCandidates).fill(null);
-        ballot[preference] = (i.values[0] != "no_preference" ? i.values[0] : null);
+        const ballot = this.draftBallots.get(i.user.id)
+            ? this.draftBallots.get(i.user.id)!
+            : Array<string | null>(numberOfCandidates).fill(null);
+        ballot[preference] =
+            i.values[0] != "no_preference" ? i.values[0] : null;
         this.draftBallots.set(i.user.id, ballot);
 
         const ballotPage = Math.floor(preference / 4);
-       await i.update(await this.getVotingPage(ballotPage, i.user));
+        await i.update(await this.getVotingPage(ballotPage, i.user));
     }
 
     async submitVote(i: ButtonInteraction) {
@@ -164,40 +223,75 @@ export default class ElectionVoting extends Module {
                 .setCustomId("confirmsubmitelectionvote")
                 .setLabel("This is Correct")
                 .setStyle(ButtonStyle.Success)
-        )
+        );
 
-        let outputMessage = "**PLEASE CONFIRM THAT THE BELOW VOTE IS CORRECT:**";
+        let outputMessage =
+            "**PLEASE CONFIRM THAT THE BELOW VOTE IS CORRECT:**";
 
-        const draftBallot = this.draftBallots.get(i.user.id)?.filter((pref, pos) => pref != null && this.draftBallots.get(i.user.id)!.indexOf(pref) == pos && candidates.map(c => c.discordId!).includes(pref));
+        const draftBallot = this.draftBallots
+            .get(i.user.id)
+            ?.filter(
+                (pref, pos) =>
+                    pref != null &&
+                    this.draftBallots.get(i.user.id)!.indexOf(pref) == pos &&
+                    candidates.map((c) => c.discordId!).includes(pref)
+            );
 
-        if (!draftBallot || draftBallot.length == 0) return i.reply({ content: "You must specify at least one preference before saving your ballot.", ephemeral: true });
+        if (!draftBallot || draftBallot.length == 0)
+            return i.reply({
+                content:
+                    "You must specify at least one preference before saving your ballot.",
+                ephemeral: true,
+            });
 
         for (const [i, preference] of draftBallot.entries()) {
-            outputMessage += `\nPreference ${i + 1}: **${await this.authModule.getMinecraftOrDiscordName(preference!, true)}**`;
+            outputMessage += `\nPreference ${
+                i + 1
+            }: **${await this.authModule.getMinecraftOrDiscordName(
+                preference!,
+                true
+            )}**`;
         }
 
-       await i.update({ content: outputMessage, components: [row] });
+        await i.update({ content: outputMessage, components: [row] });
     }
 
     async confirmSubmitVote(i: ButtonInteraction) {
         // Just in case they're somehow decitizened after initiating their vote
-        if (!await checkCitizenship(i.user.id)) return i.update({ content: "You must be a citizen to vote.", components: [] });
+        if (!(await checkCitizenship(i.user.id)))
+            return i.update({
+                content: "You must be a citizen to vote.",
+                components: [],
+            });
 
         const electionPhase = await ElectionInfo.findOne().exec();
-        if (electionPhase?.currentPhase != 2) return i.update({ content: "Voting is not currently open.", components: [] });
+        if (electionPhase?.currentPhase != 2)
+            return i.update({
+                content: "Voting is not currently open.",
+                components: [],
+            });
 
         const preferences = this.draftBallots.get(i.user.id);
-        if (!preferences) return i.update({ content: "Your draft preferences seem to have not been saved. You will need to re-enter them by clicking on the `Vote` button again." })
+        if (!preferences)
+            return i.update({
+                content:
+                    "Your draft preferences seem to have not been saved. You will need to re-enter them by clicking on the `Vote` button again.",
+            });
 
         const vote = new ElectionVote({
             discordId: i.user.id,
-            preferences: preferences.filter((pref, pos) => pref != null && preferences.indexOf(pref) == pos)
+            preferences: preferences.filter(
+                (pref, pos) => pref != null && preferences.indexOf(pref) == pos
+            ),
         });
 
         await ElectionVote.deleteOne({ discordId: i.user.id }).exec();
         await vote.save();
 
-       await i.update({ content: "Saved! Thanks for voting!", components: [] });
+        await i.update({
+            content: "Saved! Thanks for voting!",
+            components: [],
+        });
         this.logger.info("Saved vote for " + i.user.tag);
     }
 }
