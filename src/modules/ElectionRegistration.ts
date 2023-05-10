@@ -332,7 +332,7 @@ export default class ElectionRegistration extends Module {
                             return;
                         }
         
-                        i.reply({ content: outputMessage, ephemeral: true });
+                       await i.reply({ content: outputMessage, ephemeral: true });
                     }
                 },
                 call: {

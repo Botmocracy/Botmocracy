@@ -105,7 +105,7 @@ export default class Info extends Module {
                 },
                 add: {
                     executor: async (i: ChatInputCommandInteraction) => {
-                        await i.deferReply({ ephemeral: true });
+                       await i.deferReply({ ephemeral: true });
 
                         const account = await Account.findOne({
                             discordId: i.user.id,
