@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { model, Schema } from 'mongoose';
 
 const accountSchema = new Schema({

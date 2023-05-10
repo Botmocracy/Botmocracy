@@ -1,7 +1,7 @@
-import Module from "./abstract/Module";
 import capcon from "capture-console";
-import { config } from "..";
 import { TextChannel } from "discord.js";
+import { config } from "..";
+import Module from "./abstract/Module";
 
 export default class DiscordLogger extends Module {
     name = "DiscordLogger";
@@ -23,7 +23,7 @@ export default class DiscordLogger extends Module {
                 }
                 if (logMessageBuilder.length + message.length > 1995) {
                     logMessageBuilder += "```";
-                    this.sendMessage(logMessageBuilder);
+                    void this.sendMessage(logMessageBuilder);
                     logMessageBuilder = builderStart;
                 }
                 logMessageBuilder += message;
@@ -32,12 +32,12 @@ export default class DiscordLogger extends Module {
 
             if (logMessageBuilder != builderStart) {
                 logMessageBuilder += "```";
-                this.sendMessage(logMessageBuilder);
+                void this.sendMessage(logMessageBuilder);
             }
         }, 2000)
     }
 
-    sendMessage(message: string) {
-        (this.client?.channels.cache.get(config.logs_channel) as TextChannel)!.send(message);
+    async sendMessage(message: string) {
+       await (this.client?.channels.cache.get(config.logs_channel) as TextChannel)!.send(message);
     }
 }

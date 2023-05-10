@@ -1,4 +1,4 @@
-import { ChannelResolvable, MessageMentionTypes, PermissionsString, RoleResolvable } from "discord.js";
+import { MessageMentionTypes, PermissionsString, RoleResolvable } from "discord.js";
 
 export default interface Config {
     guild: string,

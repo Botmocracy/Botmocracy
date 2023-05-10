@@ -1,16 +1,17 @@
+/* eslint-disable no-fallthrough */
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, TextChannel } from "discord.js";
-import timestring from 'timestring'; // Why can't they just do this like everyone else
 import lt from 'long-timeout';
+import timestring from 'timestring'; // Why can't they just do this like everyone else
 import { config } from "..";
 import Account from "../schema/Account";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import ElectionVote from "../schema/ElectionVote";
 import { ElectionPhase } from "../util/ElectionPhase";
-import Module from "./abstract/Module";
 import ElectionCounter from "./ElectionCounter";
 import ElectionVoting from "./ElectionVoting";
 import RoleAudit from "./RoleAudit";
+import Module from "./abstract/Module";
 
 export default class ElectionManager extends Module {
     name = "ElectionManager";
@@ -25,9 +26,9 @@ export default class ElectionManager extends Module {
     votingHandler: ElectionVoting | undefined;
     roleAuditor: RoleAudit | undefined;
 
-    timeouts: Array<lt.Timeout> = [];
+    timeouts: lt.Timeout[] = [];
 
-    async onEnable() {
+    onEnable() {
         this.logger.info("Enabled");
         this.updatesChannel = this.client?.channels.cache.get(config.election_updates_channel) as TextChannel;
     }
@@ -43,19 +44,19 @@ export default class ElectionManager extends Module {
 
         const currentPhase: number = info.currentPhase;
         this.registrationBegin = info.processStartTime.getTime();
-        this.votingBegin = this.registrationBegin!! + timestring(config.election_registration_period, "ms");
+        this.votingBegin = this.registrationBegin + timestring(config.election_registration_period, "ms");
         this.votingEnd = this.votingBegin + timestring(config.election_vote_period, "ms");
         this.powerTransition = this.votingEnd + timestring(config.power_transition_period, "ms");
 
         switch (currentPhase) {
             case 0:
-                this.timeouts.push(lt.setTimeout(() => this.beginRegistration(), this.registrationBegin!! - Date.now()));
+                this.timeouts.push(lt.setTimeout(() => void this.beginRegistration(), this.registrationBegin - Date.now()));
             case 1:
-                this.timeouts.push(lt.setTimeout(() => this.beginVoting(), this.votingBegin - Date.now()));
+                this.timeouts.push(lt.setTimeout(() => void this.beginVoting(), this.votingBegin - Date.now()));
             case 2:
-                this.timeouts.push(lt.setTimeout(() => this.endVoting(), this.votingEnd - Date.now()));
+                this.timeouts.push(lt.setTimeout(() => void this.endVoting(), this.votingEnd - Date.now()));
             case 3:
-                this.timeouts.push(lt.setTimeout(() => this.transition(), this.powerTransition - Date.now()));
+                this.timeouts.push(lt.setTimeout(() => void this.transition(), this.powerTransition - Date.now()));
         }
     }
 
@@ -74,7 +75,7 @@ export default class ElectionManager extends Module {
             await electionInfo.save();
         }
 
-        this.run();
+       await this.run();
     }
 
     timestamp(time: number) {
@@ -85,19 +86,19 @@ export default class ElectionManager extends Module {
         const currentInfo = await ElectionInfo.findOne().exec();
         if (!currentInfo) throw new Error("Unable to update election phase: Info fetch failed");
 
-        await currentInfo.deleteOne();
+        await currentInfo.deleteOne().exec();
 
         const newInfo = new ElectionInfo({
             currentPhase: phase,
             processStartTime: currentInfo.processStartTime
         });
 
-        newInfo.save();
+       await newInfo.save();
     }
 
     async beginRegistration() {
-        this.updateElectionPhase(ElectionPhase.REGISTRATION);
-        this.updatesChannel!.send([
+       await this.updateElectionPhase(ElectionPhase.REGISTRATION);
+       await this.updatesChannel!.send([
             `<@&${config.citizen_role}> **Presidential Election registration is now open!**`,
             `Any citizen may run. To register, run \`/election enter\` and specify your running-mate, who will be vice president if elected.`,
             `Important times to take note of:`,
@@ -113,7 +114,7 @@ export default class ElectionManager extends Module {
         const candidates = await ElectionCandidate.find().exec();
         if (candidates.length == 0) return this.noElectionCandidatesOrVotes();
 
-        this.updateElectionPhase(ElectionPhase.VOTING);
+       await this.updateElectionPhase(ElectionPhase.VOTING);
         const row = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
@@ -121,7 +122,7 @@ export default class ElectionManager extends Module {
                     .setLabel("Vote")
                     .setStyle(ButtonStyle.Primary)
             );
-        this.updatesChannel!.send({
+       await this.updatesChannel!.send({
             content: [
                 `<@&${config.citizen_role}> **Presidential Election voting is now open!**`,
                 `Press the button below before ${this.timestamp(this.votingEnd!)} to have your say in choosing the next President!`,
@@ -137,12 +138,12 @@ export default class ElectionManager extends Module {
         const votes = await ElectionVote.find().exec();
         if (votes.length == 0) return this.noElectionCandidatesOrVotes();
 
-        this.updateElectionPhase(ElectionPhase.TRANSITION);
-        this.updatesChannel!.send("**Election voting has closed.** Counting will commence shortly.");
+       await this.updateElectionPhase(ElectionPhase.TRANSITION);
+       await this.updatesChannel!.send("**Election voting has closed.** Counting will commence shortly.");
 
-        while (!this.counter) { } // Wait for the counter to become ready before doing anything
+        while (!this.counter) { /* empty */ } // Wait for the counter to become ready before doing anything
 
-        this.counter.commenceCount();
+       await this.counter.commenceCount();
     }
 
     async elect(elected: string) {
@@ -150,7 +151,7 @@ export default class ElectionManager extends Module {
         if (!candidateInfo) throw new Error("Elected candidate isn't a candidate...???");
 
         const runningMate = candidateInfo.runningMateDiscordId;
-        this.updatesChannel!.send(`**Congratulations to our President Elect <@${elected}> and Vice President Elect <@${runningMate}>!**\nRoles will be transferred at ${this.timestamp(this.powerTransition!)}`);
+       await this.updatesChannel!.send(`**Congratulations to our President Elect <@${elected}> and Vice President Elect <@${runningMate}>!**\nRoles will be transferred at ${this.timestamp(this.powerTransition!)}`);
 
         const currentElectionInfo = await ElectionInfo.findOne().exec();
 
@@ -160,8 +161,8 @@ export default class ElectionManager extends Module {
             winners: [elected, runningMate]
         });
 
-        await currentElectionInfo?.deleteOne();
-        newElectionInfo.save();
+       await currentElectionInfo?.deleteOne().exec();
+       await newElectionInfo.save();
     }
 
     async transition() {
@@ -171,27 +172,27 @@ export default class ElectionManager extends Module {
 
         const guild = this.client?.guilds.cache.get(config.guild);
 
-        const presidentRole = await guild?.roles.fetch(config.president_role)!;
-        const vicePresidentRole = await guild?.roles.fetch(config.vice_president_role)!;
-        const governmentRole = await guild?.roles.fetch(config.government_role)!;
+        const presidentRole = await guild!.roles.fetch(config.president_role);
+        const vicePresidentRole = await guild!.roles.fetch(config.vice_president_role);
+        const governmentRole = await guild!.roles.fetch(config.government_role);
 
         const electedRoleIds = [presidentRole!.id, vicePresidentRole!.id, governmentRole!.id];
 
         await guild?.members.fetch(); // Do the cache things
 
         for (const account of await Account.find()) {
-            const newRoles = (account.roles as unknown as Array<string>).filter(role => !electedRoleIds.includes(role));
+            const newRoles = (account.roles as unknown as string[]).filter(role => !electedRoleIds.includes(role));
 
             const member = guild?.members.cache.get(account.discordId!);
-            if (member && member.roles.cache.hasAny(...electedRoleIds)) {
-                await member.roles.remove(electedRoleIds, "Transfer of power");
+            if (member?.roles.cache.hasAny(...electedRoleIds)) {
+               await member.roles.remove(electedRoleIds, "Transfer of power");
             }
 
-            if (account.roles as unknown as string[] != newRoles) await Account.updateOne({discordId: account.discordId}, {roles: newRoles});
+            if (account.roles as unknown as string[] != newRoles)await Account.updateOne({discordId: account.discordId}, {roles: newRoles});
         }
 
-        for (const member of guild?.members.cache.values()!) {
-            if (member.roles.cache.hasAny(...electedRoleIds) && !member.user.bot) await member.roles.remove(electedRoleIds, "Transfer of power");
+        for (const member of guild!.members.cache.values()!) {
+            if (member.roles.cache.hasAny(...electedRoleIds) && !member.user.bot)await member.roles.remove(electedRoleIds, "Transfer of power");
         }
 
         await this.roleAuditor?.auditRoles(); // In case anything sneaky was going on
@@ -202,55 +203,55 @@ export default class ElectionManager extends Module {
         const vicePresidentMember = await guild?.members.fetch(winners[1]);
 
         // There is a possibility that they will have left the server
-        if (presidentMember != undefined && presidentMember.roles != undefined) {
+        if (presidentMember?.roles != undefined) {
             await presidentMember.roles.add([presidentRole!, governmentRole!], "Transfer of power");
 
         }
-        if (vicePresidentMember != undefined && vicePresidentMember.roles != undefined) {
+        if (vicePresidentMember?.roles != undefined) {
             await vicePresidentMember.roles.add([vicePresidentRole!, governmentRole!], "Transfer of power");
         }
 
         this.scheduleNextElection().then(nextElectionTime => {
-            (this.client?.channels.cache.get(config.announcement_channel)! as TextChannel).send([
+           void (this.client!.channels.cache.get(config.announcement_channel)! as TextChannel).send([
                 `@everyone give a big hand to our new President and Vice President, <@${winners[0]}> and <@${winners[1]}>!`,
                 `The next election process has been scheduled to begin at ${this.timestamp(nextElectionTime)}.`
             ].join("\n"))
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         }).catch(err => this.logger.error(err))
 
-        const governmentChatChannel: TextChannel = this.client!.channels.cache.get(config.government_chat_channel) as TextChannel;
-        if (governmentChatChannel) governmentChatChannel.send(`<@${winners[0]}> <@${winners[1]}> Welcome! You may want to check through the settings of each channel (and category) to ensure that the last government haven't given themselves any special permissions :wink:`);
+        const governmentChatChannel = this.client!.channels.cache.get(config.government_chat_channel) as TextChannel | undefined;
+        if (governmentChatChannel)await governmentChatChannel.send(`<@${winners[0]}> <@${winners[1]}> Welcome! You may want to check through the settings of each channel (and category) to ensure that the last government haven't given themselves any special permissions :wink:`);
     }
 
     async scheduleNextElection(): Promise<number> {
-        return new Promise(async (res, rej) => {
-            const currentInfo = await ElectionInfo.findOne().exec();
+        const currentInfo = await ElectionInfo.findOne().exec();
 
-            if (currentInfo == null) return rej("Failed to fetch election info");
+        if (currentInfo == null) throw Error("Failed to fetch election info");
 
-            const nextElectionTime = currentInfo.processStartTime!.getTime() + timestring(config.time_between_elections, "ms");
+        const nextElectionTime = currentInfo.processStartTime!.getTime() + timestring(config.time_between_elections, "ms");
 
-            const newElectionInfo = new ElectionInfo({
-                processStartTime: new Date(nextElectionTime),
-                currentPhase: ElectionPhase.INACTIVE
-            });
-
-            if (newElectionInfo.processStartTime!.getTime() < Date.now()) return rej("Election is scheduled for the past. This will not end well.")
-
-            await currentInfo.deleteOne();
-            await newElectionInfo.save();
-
-            this.run();
-
-            ElectionCandidate.deleteMany().exec();
-            ElectionVote.deleteMany().exec();
-
-            res(nextElectionTime);
+        const newElectionInfo = new ElectionInfo({
+            processStartTime: new Date(nextElectionTime),
+            currentPhase: ElectionPhase.INACTIVE
         });
+
+        if (newElectionInfo.processStartTime!.getTime() < Date.now()) throw Error("Election is scheduled for the past. This will not end well.")
+
+       await currentInfo.deleteOne().exec();
+       await newElectionInfo.save();
+
+       await this.run();
+
+       await ElectionCandidate.deleteMany().exec();
+       await ElectionVote.deleteMany().exec();
+
+        return nextElectionTime;
     }
 
-    async noElectionCandidatesOrVotes() {
+    noElectionCandidatesOrVotes() {
         this.scheduleNextElection().then(nextElectionTime => {
-            this.updatesChannel!.send(`Well....this is awkward. No candidates are entered/have voted in the election. Roles will remain as are until the next scheduled one at ${this.timestamp(nextElectionTime)}`);
+           void this.updatesChannel!.send(`Well....this is awkward. No candidates are entered/have voted in the election. Roles will remain as are until the next scheduled one at ${this.timestamp(nextElectionTime)}`);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         }).catch(err => this.logger.error(err))
     }
 }

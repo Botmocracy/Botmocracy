@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder, ChatInputCommandInteraction, RoleResolvable, PermissionResolvable } from "discord.js";
 
 export interface CommandOptions {
@@ -9,5 +10,5 @@ export interface CommandOptions {
 export interface SubcommandOptions {
     cmdBuilder: SlashCommandSubcommandsOnlyBuilder,
     executor?: (i: ChatInputCommandInteraction) => Promise<any>
-    subcommands: {[key: string]: Omit<CommandOptions, "cmdBuilder">}
+    subcommands: Record<string, Omit<CommandOptions, "cmdBuilder">>
 }

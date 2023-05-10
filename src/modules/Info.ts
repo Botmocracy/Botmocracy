@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 import axios from "axios";
 import { ChatInputCommandInteraction, Colors, EmbedBuilder, SlashCommandBuilder, TextChannel } from "discord.js";
 import { request } from "undici";
@@ -29,7 +30,8 @@ export default class Info extends Module {
         }
 
 
-        const towns: [{ [key: string]: any }] = JSON.parse(fullBody);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const towns = JSON.parse(fullBody) as Record<string, any>[];
         for (const townData of towns) {
             if (townData['Town Name'] == name) {
                 return townData;
@@ -61,40 +63,39 @@ export default class Info extends Module {
             subcommands: {
                 get: {
                     executor: async (i: ChatInputCommandInteraction) => {
-                        await i.deferReply({ ephemeral: true });
-                        Town.findOne({ name: i.options.getString("name") }, async (err: any, res: any) => {
-                            if (!res || err) {
-                                await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
-                                return;
-                            }
-                            const name = res['name'];
-                            const mayor = res['mayor'];
-                            const depMayor = res['depMayor'];
-                            const coords = res['coords'];
+                       await i.deferReply({ ephemeral: true });
+                        const res = await Town.findOne({ name: i.options.getString("name") }).catch(() => null);
+                        if (!res) {
+                           await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
+                            return;
+                        }
+                        const name = res['name']!;
+                        const mayor = res['mayor']!;
+                        const depMayor = res['depMayor'];
+                        const coords = res['coords']!;
 
-                            const embed = new EmbedBuilder()
-                                .setTitle(name)
-                                .addFields([
-                                    {name: "Mayor", value: mayor},
-                                    {name: "Deputy Mayor", value: depMayor},
-                                    {name: "Coords", value: coords}
-                                ])
-                                .setColor(Colors.Blurple);
+                        const embed = new EmbedBuilder()
+                            .setTitle(name)
+                            .addFields([
+                                {name: "Mayor", value: mayor},
+                                {name: "Deputy Mayor", value: depMayor},
+                                {name: "Coords", value: coords}
+                            ])
+                            .setColor(Colors.Blurple);
 
-                            await i.editReply({ embeds: [embed] });
-                        })
+                       await i.editReply({ embeds: [embed] });
                     }
                 },
                 add: {
                     executor: async (i: ChatInputCommandInteraction) => {
-                        await i.deferReply({ ephemeral: true });
+                       await i.deferReply({ ephemeral: true });
 
                         const account = await Account.findOne({ discordId: i.user.id }).exec();
                         if (!account) return i.editReply({ content: "I can't find any account data for you. Are you verified? "});
 
                         const townName = i.options.getString("name", true);
 
-                        let townData: { [key: string]: string } | undefined = await this.getTownByName(townName);
+                        const townData: Record<string, string> | undefined = await this.getTownByName(townName);
                         if (!townData) return i.editReply({ content: "This town does not exist." });
 
                         if (await Town.findOne({ name: townName }).exec() != null) return i.editReply({ content: "This town is already registered." });
@@ -107,10 +108,12 @@ export default class Info extends Module {
                             rank: townData['Town Rank']
                         });
 
-                        const minecraftName = await this.auth?.getMinecraftNameFromDiscordId(i.user.id);
+                        const minecraftName = await this.auth?.getMinecraftNameFromDiscordId(i.user.id) ?? "";
 
-                        const { data: memberData } = await axios.get("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members");
-                        const executorMemberData = memberData.filter((v: { [key: string]: string }) =>
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                        const memberData: Record<string, string>[] = (await axios.get("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members")).data;
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+                        const executorMemberData = memberData.filter(v =>
                             v["Username"] == minecraftName ||
                             v["Temporary Usernames"].split(", ").includes(minecraftName) ||
                             v["Former Usernames"].split(", ").includes(minecraftName)
@@ -127,14 +130,14 @@ export default class Info extends Module {
                         if (!usernames.includes(townData["Mayor"].toLowerCase())) return i.editReply({ content: "You don't seem to own this town." });
 
                         account.citizen = true;
-                        account.save();
+                       await account.save();
 
-                        await town.save();
-                        await i.editReply({ content: "Successfully added town!" });
+                       await town.save();
+                       await i.editReply({ content: "Successfully added town!" });
                         const member = await this.client?.guilds.cache.get(config.guild)?.members.fetch(i.user);
-                        await member!.roles.add(config.citizen_role);
+                       await member!.roles.add(config.citizen_role);
                         const notificationChannel = this.client?.channels.cache.get(config.town_notifications_channel) as TextChannel;
-                        notificationChannel.send(`${i.user} has joined with **${townName}**!`);
+                       await notificationChannel.send(`${i.user} has joined with **${townName}**!`);
                     }
                 }
             }

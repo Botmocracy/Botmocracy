@@ -1,4 +1,4 @@
-import { ButtonInteraction, GuildMember, ActionRowBuilder, ButtonBuilder, TextChannel, SlashCommandBuilder, ButtonStyle, ChatInputCommandInteraction } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, GuildMember, SlashCommandBuilder, TextChannel } from "discord.js";
 import { CallbackError } from "mongoose";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
@@ -15,14 +15,14 @@ export default class ElectionRegistration extends Module {
     onEnable(): void {
         this.logger.info("Enabled");
 
-        this.client?.on("interactionCreate", i => {
+        this.client?.on("interactionCreate", async (i) => {
             if(i.guildId != config.guild) return;
             
             if (i.isButton()) {
                 if (i.customId.startsWith("confirmcandidacy")) {
-                    this.confirmCandidacy(i);
+                   await this.confirmCandidacy(i);
                 } else if (i.customId.startsWith("confirmwithdrawal")) {
-                    this.confirmWithdrawal(i);
+                   await this.confirmWithdrawal(i);
                 }
             }
         });
@@ -32,8 +32,8 @@ export default class ElectionRegistration extends Module {
         this.authModule = modules.get("Auth") as Auth;
     }
 
-    confirmCandidacy(i: ButtonInteraction) {
-        let userIds = i.customId.split("-");
+    async confirmCandidacy(i: ButtonInteraction) {
+        const userIds = i.customId.split("-");
         userIds.shift() // Remove "confirmcandidacy"
 
         // Make sure there's no sorcery going on
@@ -41,38 +41,40 @@ export default class ElectionRegistration extends Module {
 
         const candidate = i.member;
         const runningMate = i.guild.members.cache.get(userIds[1]);
+        const electionInfo = await ElectionInfo.findOne().exec().catch((err: CallbackError) => {
+           void i.reply({ content: "Error retrieving election info: " + (err?.toString() ?? ""), ephemeral: true });
+        });
+        if (!electionInfo) {
+            if (electionInfo === null) await i.reply({ content: "Error retrieving election info: not found", ephemeral: true });
+            return
+        }
 
-        ElectionInfo.findOne((err: CallbackError, data: any) => {
-            if (err) return i.reply({ content: "Error retrieving election info: " + err.toString(), ephemeral: true });
-
-            if (data.currentPhase != 1) return i.update({
-                content: "Election registration is not currently open. Please refer to <#" + config.election_updates_channel + "> for more information.",
-                components: []
-            })
-
-            ElectionCandidate.findOne({ discordId: candidate?.user.id }, (err: CallbackError, data: any) => {
-                if (data) return i.update({ content: "You have already entered this election.", components: [] });
-
-                const candidateInfo = new ElectionCandidate({
-                    discordId: candidate?.user.id,
-                    runningMateDiscordId: runningMate?.user.id
-                });
-                candidateInfo.save();
-
-                i.update({ content: "Confirmed!", components: [] });
-
-                const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
-                if (!updatesChannel) return;
-
-                updatesChannel.send(`${candidate} has entered the election! Their running-mate is ${runningMate}!`);
-            })
-
-
+        if (electionInfo.currentPhase != 1) return i.update({
+            content: "Election registration is not currently open. Please refer to <#" + config.election_updates_channel + "> for more information.",
+            components: []
         })
+        const existingElectionCandidate = await ElectionCandidate.findOne({ discordId: candidate?.user.id }).exec();
+        if (existingElectionCandidate) {
+           await i.update({ content: "You have already entered this election.", components: [] });
+            return
+        }
+        
+        const candidateInfo = new ElectionCandidate({
+            discordId: candidate?.user.id,
+            runningMateDiscordId: runningMate?.user.id
+        });
+       await candidateInfo.save();
+
+       await i.update({ content: "Confirmed!", components: [] });
+
+        const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
+        if (!updatesChannel) return;
+
+       await updatesChannel.send(`${candidate} has entered the election! Their running-mate is ${runningMate}!`);
     }
 
     async confirmWithdrawal(i: ButtonInteraction) {
-        let userIds = i.customId.split("-");
+        const userIds = i.customId.split("-");
         userIds.shift() // Remove "confirmwithdrawal"
 
         // Make sure there's no sorcery going on
@@ -82,15 +84,15 @@ export default class ElectionRegistration extends Module {
         const runningAsSecondary = await ElectionCandidate.findOne({ discordId: userIds[1], runningMateDiscordId: userIds[0] });
 
         if (!runningAsPrimary && !runningAsSecondary) return i.reply({ content: "Oops. Looks like something broke.", ephemeral: true });
-        if (runningAsPrimary) runningAsPrimary.deleteOne();
-        if (runningAsSecondary) runningAsSecondary.deleteOne();
+        if (runningAsPrimary)await runningAsPrimary.deleteOne().exec();
+        if (runningAsSecondary)await runningAsSecondary.deleteOne().exec();
 
-        i.update({ content: "Confirmed", components: [] });
+       await i.update({ content: "Confirmed", components: [] });
 
         const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
         if (!updatesChannel) return;
 
-        updatesChannel.send(`<@${userIds[0]}> has withdrawn <@${userIds[0]}> and <@${userIds[1]}> from the election.`);
+       await updatesChannel.send(`<@${userIds[0]}> has withdrawn <@${userIds[0]}> and <@${userIds[1]}> from the election.`);
     }
 
     slashCommands = {
@@ -124,11 +126,11 @@ export default class ElectionRegistration extends Module {
                     allowedRoles: [config.citizen_role],
                     executor: async (i: ChatInputCommandInteraction) => {
                         if (!i.guild) {
-                            i.reply({ content: "You can't use this in a DM", ephemeral: true });
+                           await i.reply({ content: "You can't use this in a DM", ephemeral: true });
                             return;
                         }
         
-                        const runningMate = i.options.getMember("runningmate") as GuildMember;
+                        const runningMate = i.options.getMember("runningmate") as GuildMember | null;
         
                         if (!runningMate)
                             return i.reply({ content: "That person is not a member of this server.", ephemeral: true });
@@ -147,7 +149,7 @@ export default class ElectionRegistration extends Module {
                                     .setLabel("Confirm")
                             );
         
-                        i.reply({
+                       await i.reply({
                             content: `**Are you sure?**\n\nBy clicking the \`Confirm\` button, you agree to enter yourself into the election and that your running-mate ${runningMate} is willing to enter also.`,
                             components: [row],
                             ephemeral: true
@@ -176,8 +178,8 @@ export default class ElectionRegistration extends Module {
                                     .setLabel("Confirm")
                             );
         
-                        i.reply({
-                            content: `**Are you sure?**\n\If you click the \`Confirm\` button, this combination will be removed from the election`,
+                       await i.reply({
+                            content: `**Are you sure?**\nIf you click the \`Confirm\` button, this combination will be removed from the election`,
                             components: [row],
                             ephemeral: true
                         });
@@ -187,7 +189,7 @@ export default class ElectionRegistration extends Module {
                     executor: async (i: ChatInputCommandInteraction) => {
                         const candidates = await ElectionCandidate.find().exec();
         
-                        if (!candidates) {
+                        if (candidates.length == 0) {
                             await i.reply({ content: "Unable to fetch the candidates list. Please try again later.", ephemeral: true });
                             return;
                         } 
@@ -198,7 +200,7 @@ export default class ElectionRegistration extends Module {
                             outputMessage += `\n**${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!, true)}** for President; **${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!, true)}** for Vice President.`;
                         }
         
-                        i.reply({ content: outputMessage, ephemeral: true });
+                       await i.reply({ content: outputMessage, ephemeral: true });
                     }
                 }
             }

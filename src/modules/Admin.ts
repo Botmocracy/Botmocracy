@@ -8,9 +8,9 @@ export default class Admin extends Module {
 
     onEnable(): void {
         this.logger.info("Enabled");
-        this.client?.on('interactionCreate', (i) => {
+        this.client?.on('interactionCreate', async (i) => {
             if(!i.isModalSubmit()) return;
-            this.onModalSubmit(i);
+            await this.onModalSubmit(i);
         })
     }
 
@@ -20,8 +20,8 @@ export default class Admin extends Module {
         const channelId = idSplit[1];
         const channel = this.client?.channels.cache.get(channelId);
         if(channel?.type !== ChannelType.GuildText) return i.reply({ content: "Imagine", ephemeral: true });
-        channel.send(i.fields.getTextInputValue("text"));
-        i.reply({content: "Done", ephemeral: true});
+        await channel.send(i.fields.getTextInputValue("text"));
+        await i.reply({content: "Done", ephemeral: true});
     }
 
     slashCommands = {
@@ -36,11 +36,11 @@ export default class Admin extends Module {
                 const member = i.guild!.members.cache.get(i.user.id);
 
                 if (member?.roles.cache.has(config.admin_role)) {
-                    member.roles.remove(role!);
+                   await member.roles.remove(role!);
                     return i.reply({ content: "Done.", ephemeral: true });
                 }
 
-                member?.roles.add(role!);
+               await member?.roles.add(role!);
                 return i.reply({ content: "Done.", ephemeral: true });
             }
         },
@@ -50,18 +50,18 @@ export default class Admin extends Module {
                 if (!i.inGuild()) return;
                 if (!config.admins.includes(i.user.id)) return i.reply({ content: "You cannot use this.", ephemeral: true });
 
-                exec("git pull", (err, stdout, stderr) => {
+                exec("git pull", (err) => {
                     if(err != null) {
-                        i.reply({content: `Something went wrong when doing git pull: ${err.message}`, ephemeral: true});
+                       void i.reply({content: `Something went wrong when doing git pull: ${err.message}`, ephemeral: true});
                     }
                 });
-                exec("npm install", (err, stdout, stderr) => {
+                exec("npm install", (err) => {
                     if(err != null) {
-                        i.reply({content: `Something went wrong when doing npm install: ${err.message}`, ephemeral: true});
+                       void i.reply({content: `Something went wrong when doing npm install: ${err.message}`, ephemeral: true});
                     }
                 });
-                i.client.user?.setStatus("invisible"); // So we can see when it comes back online
-                await i.reply({ content: "Restarting", ephemeral: true });
+                i.client.user.setStatus("invisible"); // So we can see when it comes back online
+               await i.reply({ content: "Restarting", ephemeral: true });
                 process.exit(0);
             }
         },
@@ -75,10 +75,13 @@ export default class Admin extends Module {
                 if (!config.admins.includes(i.user.id)) return i.reply({ content: "You cannot use this.", ephemeral: true });
 
                 try {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const result = eval(i.options.getString("code", true));
-                    if(result) i.reply({ content: `\`\`\`${result}\`\`\``, ephemeral: true });
-                } catch (err : any) {
-                    i.reply({ content: `\`\`\`${err}\`\`\``, ephemeral: true });
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                    if(result)await i.reply({ content: `\`\`\`\n${result}\n\`\`\``, ephemeral: true });
+                } catch (err : unknown) {
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                   await i.reply({ content: `\`\`\`\n${err}\n\`\`\``, ephemeral: true });
                 }
             }
         },
@@ -97,9 +100,9 @@ export default class Admin extends Module {
                 );
 
                 const channel = i.options.getChannel("channel", true);
-                const modal = new ModalBuilder().addComponents(actionRow).setTitle("Message Modal").setCustomId(`message-${channel?.id}`);
+                const modal = new ModalBuilder().addComponents(actionRow).setTitle("Message Modal").setCustomId(`message-${channel.id}`);
 
-                i.showModal(modal);
+               await i.showModal(modal);
             }
         }
 

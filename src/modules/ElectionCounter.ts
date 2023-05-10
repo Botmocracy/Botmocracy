@@ -1,19 +1,19 @@
 import { TextChannel } from "discord.js";
+import timestring from "timestring";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionVote from "../schema/ElectionVote";
 import { formatArrayValuesAsHumanReadableString, getNextNonEmptyIndex } from "../util/array-util";
 import wait from "../util/wait";
-import Module from "./abstract/Module";
 import ElectionManager from "./ElectionManager";
-import timestring from  "timestring";
+import Module from "./abstract/Module";
 
 export default class ElectionCounter extends Module {
     name = "ElectionCounter";
 
     candidates!: string[];
-    votes: { [key: string]: Array<Array<string>> } = {};
-    countNumber: number = 0;
+    votes: Record<string, string[][]> = {};
+    countNumber = 0;
 
     manager!: ElectionManager;
 
@@ -32,7 +32,7 @@ export default class ElectionCounter extends Module {
 
         const votesRaw = await ElectionVote.find().exec();
         for (const vote of votesRaw) {
-            let ballot = (vote.preferences! as unknown as string[]).filter(p => this.candidates.includes(p));
+            const ballot = (vote.preferences! as unknown as string[]).filter(p => this.candidates.includes(p));
             if (ballot.length == 0) return;
 
             if (!this.votes[ballot[0]]) this.votes[ballot[0]] = [];
@@ -44,10 +44,10 @@ export default class ElectionCounter extends Module {
             if (!this.votes[candidate]) this.votes[candidate] = [];
         }
 
-        this.doCount();
+       await this.doCount();
     }
 
-    async doCount(changes?: { [key: string]: number }, countName?: string) {
+    async doCount(changes?: Record<string, number>, countName?: string) {
         await wait(timestring(config.time_between_counts, "ms"));
 
         // Calculate quota
@@ -58,7 +58,7 @@ export default class ElectionCounter extends Module {
 
         this.countNumber++;
 
-        let outputMessageBuilder = [];
+        const outputMessageBuilder = [];
         outputMessageBuilder.push(`**Count ${this.countNumber}: ${countName ? countName : "Initial Count"}**`);
         outputMessageBuilder.push(`*Number of valid votes: ${numberOfVotes}. Quota for election: ${quota}.*\n`);
 
@@ -73,45 +73,45 @@ export default class ElectionCounter extends Module {
 
         if (winner) {
             outputMessageBuilder.push(`**<@${winner}> has reached the quota and is therefore declared elected.**`);
-            this.manager.elect(winner);
+           await this.manager.elect(winner);
         } else {
             // Now we need to figure out who to eliminate. Put everyone into an array where their location is based on number of votes and work it out that way.
-            let candidatesSortedByNumberOfVotes: Array<Array<string>> = Array(numberOfVotes).fill(null).map(v => { return []; }); // Fucking fill using references instead of objects
+            const candidatesSortedByNumberOfVotes: string[][] = Array(numberOfVotes).fill(null).map(() => { return []; }); // Fucking fill using references instead of objects
 
             for (const c of Object.keys(this.votes)) {
                 candidatesSortedByNumberOfVotes[this.votes[c].length].push(c);
             }
 
-            let eliminating: string[] = [];
-            let totalEliminatedVotes: number = 0;
+            const eliminating: string[] = [];
+            let totalEliminatedVotes = 0;
 
-            for (let i in candidatesSortedByNumberOfVotes) {
+            for (const [i, candidates] of candidatesSortedByNumberOfVotes.entries()) {
                 const nextNumberOfVotes = getNextNonEmptyIndex(candidatesSortedByNumberOfVotes, i);
 
                 // If we can eliminate whoever has this many without reaching the next highest person (and there is a next highest person)
-                if (nextNumberOfVotes != null && totalEliminatedVotes + (candidatesSortedByNumberOfVotes[i]!.length * parseInt(i)) < nextNumberOfVotes) {
-                    eliminating.push(...candidatesSortedByNumberOfVotes[i]);
-                    totalEliminatedVotes += candidatesSortedByNumberOfVotes[i].length * parseInt(i);
+                if (nextNumberOfVotes != null && totalEliminatedVotes + (candidates.length * i) < nextNumberOfVotes) {
+                    eliminating.push(...candidates);
+                    totalEliminatedVotes += candidates.length * i;
                 } else if (eliminating.length == 0) { // There isn't a next highest person || we can't eliminate everyone here (or both really) && we have to eliminate someone
-                    let candidatesReadable = formatArrayValuesAsHumanReadableString(candidatesSortedByNumberOfVotes[i].map(c => "<@" + c + ">"));
+                    const candidatesReadable = formatArrayValuesAsHumanReadableString(candidates.map(c => "<@" + c + ">"));
                     outputMessageBuilder.push(`${candidatesReadable} are tied. One will be eliminated by random selection.`);
-                    let toEliminate = candidatesSortedByNumberOfVotes[i][Math.floor(Math.random() * candidatesSortedByNumberOfVotes[i].length - 0.001)];
+                    const toEliminate = candidatesSortedByNumberOfVotes[i][Math.floor(Math.random() * candidates.length - 0.001)];
                     eliminating.push(toEliminate);
-                    totalEliminatedVotes += parseInt(i);
+                    totalEliminatedVotes += i;
                     break; // Let's not do more than one random elimination in a count
                 } else break; // Our work here is done
             }
 
             outputMessageBuilder.push(`**${formatArrayValuesAsHumanReadableString(eliminating.map(c => "<@" + c + ">"))} ${eliminating.length > 1 ? "have" : "has"} been eliminated.**`);
 
-            this.doCount(this.distributeVotes(eliminating), `Distribution of votes belonging to ${formatArrayValuesAsHumanReadableString(eliminating.map(c => "<@" + c + ">"))}`);
+           await this.doCount(this.distributeVotes(eliminating), `Distribution of votes belonging to ${formatArrayValuesAsHumanReadableString(eliminating.map(c => "<@" + c + ">"))}`);
         }
 
-        (this.client!.channels.cache.get(config.election_updates_channel)! as TextChannel).send({ content: outputMessageBuilder.join("\n"), allowedMentions: { parse: [] } });
+       await (this.client!.channels.cache.get(config.election_updates_channel)! as TextChannel).send({ content: outputMessageBuilder.join("\n"), allowedMentions: { parse: [] } });
     }
 
-    distributeVotes(candidates: string[]): { [key: string]: number } {
-        const resultObject: { [key: string]: number } = {};
+    distributeVotes(candidates: string[]): Record<string, number> {
+        const resultObject: Record<string, number> = {};
 
         for (const candidate of Object.keys(this.votes)) resultObject[candidate] = 0; // We need to do it here so that will definitely all be ready in the next loop
 
@@ -119,6 +119,7 @@ export default class ElectionCounter extends Module {
             if (!candidates.includes(candidate)) continue; // Only distribute this person's votes if they've been eliminated
 
             for (const ballot of this.votes[candidate]) {
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
                 while (true) {
                     ballot.shift();
 

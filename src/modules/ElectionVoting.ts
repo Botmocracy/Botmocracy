@@ -1,32 +1,32 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, SelectMenuComponentOptionData, SelectMenuInteraction, StringSelectMenuBuilder, User } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, InteractionUpdateOptions, SelectMenuComponentOptionData, SelectMenuInteraction, StringSelectMenuBuilder, User } from "discord.js";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import ElectionVote from "../schema/ElectionVote";
 import checkCitizenship from "../util/check-citizenship";
-import Module from "./abstract/Module";
 import Auth from "./Auth";
+import Module from "./abstract/Module";
 
 export default class ElectionVoting extends Module {
     name = "ElectionVoting";
-    draftBallots: Map<string, (string | null)[]> = new Map();
+    draftBallots = new Map<string, (string | null)[]>();
 
     authModule!: Auth;
 
-    async onEnable() {
+    onEnable() {
         this.logger.info("Enabled");
 
         this.client?.on("interactionCreate", async (i) => {
             if(i.guildId != config.guild) return;
             if (i.isButton()) {
-                if (i.customId == "electionvote") this.startVote(i);
+                if (i.customId == "electionvote")await this.startVote(i);
                 else if (i.customId.startsWith("electionvotingpage")) {
-                    i.update(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
+                   await i.update(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
                 }
-                else if (i.customId == "submitelectionvote") this.submitVote(i);
-                else if (i.customId == "confirmsubmitelectionvote") this.confirmSubmitVote(i);
-            } else if (i.isSelectMenu()) {
-                if (i.customId.startsWith("electionpreference")) this.recordVotePreference(i);
+                else if (i.customId == "submitelectionvote")await this.submitVote(i);
+                else if (i.customId == "confirmsubmitelectionvote")await this.confirmSubmitVote(i);
+            } else if (i.isStringSelectMenu()) {
+                if (i.customId.startsWith("electionpreference"))await this.recordVotePreference(i);
             }
         });
     }
@@ -48,7 +48,7 @@ export default class ElectionVoting extends Module {
                     .setLabel("I understand. Proceed.")
                     .setStyle(ButtonStyle.Primary)
             );
-        i.reply({
+       await i.reply({
             content:
                 [
                     `**Important information regarding voting:** (Please read)`,
@@ -62,21 +62,21 @@ export default class ElectionVoting extends Module {
         });
     }
 
-    async getVotingPage(page: number, user: User): Promise<any> {
-        return new Promise(async (res) => {
+    async getVotingPage(page: number, user: User): Promise<InteractionUpdateOptions & { ephemeral?: boolean }> {
+
             // See if they've submitted a vote before and if so fill in the values
             if (page == 0 && !this.draftBallots.get(user.id)) {
-                let previousVote = await ElectionVote.findOne({ discordId: user.id }).exec();
+                const previousVote = await ElectionVote.findOne({ discordId: user.id }).exec();
                 if (previousVote) {
-                    this.draftBallots.set(user.id, previousVote.preferences! as unknown as Array<string>);
+                    this.draftBallots.set(user.id, previousVote.preferences! as unknown as string[]);
                 }
             }
 
             const electionPhase = await ElectionInfo.findOne().exec();
-            if (electionPhase?.currentPhase != 2) res({ content: "Voting is not currently open.", components: [] });
+            if (electionPhase?.currentPhase != 2) return { content: "Voting is not currently open.", components: [] };
 
             const candidates = await ElectionCandidate.find().exec();
-            const candidatesFormattedAsMenuOptions: Array<SelectMenuComponentOptionData> = [];
+            const candidatesFormattedAsMenuOptions: SelectMenuComponentOptionData[] = [];
             for (const candidate of candidates) {
                 candidatesFormattedAsMenuOptions.push({
                     label: `${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!)} (Pres), ${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!)} (VP)`,
@@ -89,7 +89,7 @@ export default class ElectionVoting extends Module {
                 value: "no_preference"
             })
 
-            const votingMessageComponents = [];
+            const votingMessageComponents: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] = [];
 
             const pageStartPreference = page * 4;
             let pageEndPreference = pageStartPreference + 3;
@@ -101,11 +101,11 @@ export default class ElectionVoting extends Module {
 
             for (let j = pageStartPreference; j <= pageEndPreference; j++) {
                 votingMessageComponents.push(
-                    new ActionRowBuilder().addComponents(
+                    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
                         new StringSelectMenuBuilder()
                             .setCustomId("electionpreference-" + j)
                             .setPlaceholder("Preference " + (j + 1) + (
-                                userDraftBallot && userDraftBallot[j]
+                                userDraftBallot[j]
                                     ? ": " + candidatesFormattedAsMenuOptions.filter(c => c.value == userDraftBallot[j])[0].label
                                     : ""
                             ))
@@ -114,7 +114,7 @@ export default class ElectionVoting extends Module {
                 )
             }
 
-            const buttonRowComponents = [];
+            const buttonRowComponents: ButtonBuilder[] = [];
 
             if (page > 0) buttonRowComponents.push(
                 new ButtonBuilder()
@@ -135,22 +135,21 @@ export default class ElectionVoting extends Module {
                     .setStyle(ButtonStyle.Success)
             );
 
-            const buttonRow = new ActionRowBuilder().addComponents(buttonRowComponents);
+            const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(buttonRowComponents);
             votingMessageComponents.push(buttonRow);
 
-            res({ content: `**Election ballot page ${page + 1}/${Math.ceil(candidates.length / 4)}**`, components: votingMessageComponents, ephemeral: true });
-        })
+            return { content: `**Election ballot page ${page + 1}/${Math.ceil(candidates.length / 4)}**`, components: votingMessageComponents, ephemeral: true };
     }
 
     async recordVotePreference(i: SelectMenuInteraction) {
         const preference = parseInt(i.customId.split("-")[1]);
         const numberOfCandidates = (await ElectionInfo.find().exec()).length;
-        const ballot = this.draftBallots.get(i.user.id) ? this.draftBallots.get(i.user.id)! : Array(numberOfCandidates).fill(null);
+        const ballot = this.draftBallots.get(i.user.id) ? this.draftBallots.get(i.user.id)! : Array<string | null>(numberOfCandidates).fill(null);
         ballot[preference] = (i.values[0] != "no_preference" ? i.values[0] : null);
         this.draftBallots.set(i.user.id, ballot);
 
         const ballotPage = Math.floor(preference / 4);
-        i.update(await this.getVotingPage(ballotPage, i.user));
+       await i.update(await this.getVotingPage(ballotPage, i.user));
     }
 
     async submitVote(i: ButtonInteraction) {
@@ -173,12 +172,11 @@ export default class ElectionVoting extends Module {
 
         if (!draftBallot || draftBallot.length == 0) return i.reply({ content: "You must specify at least one preference before saving your ballot.", ephemeral: true });
 
-        for (let i in draftBallot) {
-            let iAsNumber = parseInt(i); // It's already a number but just so ts will stfu
-            outputMessage += `\nPreference ${iAsNumber + 1}: **${await this.authModule.getMinecraftOrDiscordName(draftBallot[iAsNumber]!, true)}**`;
+        for (const [i, preference] of draftBallot.entries()) {
+            outputMessage += `\nPreference ${i + 1}: **${await this.authModule.getMinecraftOrDiscordName(preference!, true)}**`;
         }
 
-        i.update({ content: outputMessage, components: [row] });
+       await i.update({ content: outputMessage, components: [row] });
     }
 
     async confirmSubmitVote(i: ButtonInteraction) {
@@ -199,7 +197,7 @@ export default class ElectionVoting extends Module {
         await ElectionVote.deleteOne({ discordId: i.user.id }).exec();
         await vote.save();
 
-        i.update({ content: "Saved! Thanks for voting!", components: [] });
+       await i.update({ content: "Saved! Thanks for voting!", components: [] });
         this.logger.info("Saved vote for " + i.user.tag);
     }
 }
