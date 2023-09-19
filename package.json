@@ -1,24 +1,24 @@
 {
   "dependencies": {
-    "axios": "^1.4.0",
+    "axios": "^1.5.0",
     "capture-console": "^1.0.1",
     "colors": "^1.4.0",
-    "discord.js": "^14.11.0",
+    "discord.js": "^14.13.0",
     "dotenv": "^16.3.1",
     "long-timeout": "^0.1.1",
-    "mongoose": "^7.3.4",
+    "mongoose": "^7.5.2",
     "timestring": "^7.0.0",
     "ts-node": "^10.9.1",
-    "undici": "^5.22.1"
+    "undici": "^5.24.0"
   },
   "devDependencies": {
-    "@types/capture-console": "^1.0.1",
+    "@types/capture-console": "^1.0.2",
     "@types/long-timeout": "^0.1.0",
-    "@types/node": "^20.4.2",
-    "@types/timestring": "^6.0.2",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "eslint": "^8.44.0",
-    "typescript": "^5.1.6"
+    "@types/node": "^20.6.2",
+    "@types/timestring": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "eslint": "^8.49.0",
+    "typescript": "^5.2.2"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.7",
