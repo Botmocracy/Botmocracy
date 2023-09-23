@@ -15,7 +15,7 @@
     "admin_role": "995567686849400931",
     "verified_role": "995567686849400928",
     "town_notifications_channel": "995573864136454214",
-    "welcome_channel": "995567687080091777",
+    "welcome_channel": "1062490823280836658",
     "admins": ["716779626759716914", "644052617500164097", "468534859611111436"],
     "restricted_permissions": ["ManageMessages", "ManageRoles", "ManageChannels", "BanMembers", "DeafenMembers", "KickMembers", "ManageEvents", "ManageGuild", "ManageNicknames", "ManageThreads", "ManageWebhooks", "MentionEveryone", "ModerateMembers", "MoveMembers", "MuteMembers", "PrioritySpeaker", "ViewGuildInsights", "ManageEmojisAndStickers"],
     "restricted_permissions_allowed_roles": ["995567686849400931", "995567686849400929", "995572955323056220", "995567686849400926", "995567686849400924", "995567686849400927"],
