@@ -46,7 +46,7 @@ export default class ElectionManager extends Module {
 
         this.votingHandler!.draftBallots = new Map(); // Reset this
 
-        const info = await ElectionInfo.findOne().exec();
+        const info = await ElectionInfo.findOne();
         if (!info) return this.logger.error("Failed to get election info.");
         if (
             info.processStartTime == undefined ||
@@ -107,7 +107,7 @@ export default class ElectionManager extends Module {
                 currentPhase: 0,
             });
 
-            await ElectionInfo.deleteMany().exec();
+            await ElectionInfo.deleteMany();
             await electionInfo.save();
         }
 
@@ -119,13 +119,13 @@ export default class ElectionManager extends Module {
     }
 
     async updateElectionPhase(phase: ElectionPhase) {
-        const currentInfo = await ElectionInfo.findOne().exec();
+        const currentInfo = await ElectionInfo.findOne();
         if (!currentInfo)
             throw new Error(
                 "Unable to update election phase: Info fetch failed"
             );
 
-        await currentInfo.deleteOne().exec();
+        await currentInfo.deleteOne();
 
         const newInfo = new ElectionInfo({
             currentPhase: phase,
@@ -158,7 +158,7 @@ export default class ElectionManager extends Module {
     }
 
     async beginVoting() {
-        const candidates = await ElectionCandidate.find().exec();
+        const candidates = await ElectionCandidate.find();
         if (candidates.length == 0) return this.noElectionCandidatesOrVotes();
 
         await this.updateElectionPhase(ElectionPhase.VOTING);
@@ -181,10 +181,10 @@ export default class ElectionManager extends Module {
     }
 
     async endVoting() {
-        const candidates = await ElectionCandidate.find().exec();
+        const candidates = await ElectionCandidate.find();
         if (candidates.length == 0) return this.noElectionCandidatesOrVotes();
 
-        const votes = await ElectionVote.find().exec();
+        const votes = await ElectionVote.find();
         if (votes.length == 0) return this.noElectionCandidatesOrVotes();
 
         await this.updateElectionPhase(ElectionPhase.TRANSITION);
@@ -213,7 +213,7 @@ export default class ElectionManager extends Module {
             )}`
         );
 
-        const currentElectionInfo = await ElectionInfo.findOne().exec();
+        const currentElectionInfo = await ElectionInfo.findOne();
 
         const newElectionInfo = new ElectionInfo({
             processStartTime: currentElectionInfo?.processStartTime,
@@ -221,12 +221,12 @@ export default class ElectionManager extends Module {
             winners: [elected, runningMate],
         });
 
-        await currentElectionInfo?.deleteOne().exec();
+        await currentElectionInfo?.deleteOne();
         await newElectionInfo.save();
     }
 
     async transition() {
-        const electionInfo = await ElectionInfo.findOne().exec();
+        const electionInfo = await ElectionInfo.findOne();
 
         if (!electionInfo) throw new Error("Failed to fetch election info");
 
@@ -320,7 +320,7 @@ export default class ElectionManager extends Module {
     }
 
     async scheduleNextElection(): Promise<number> {
-        const currentInfo = await ElectionInfo.findOne().exec();
+        const currentInfo = await ElectionInfo.findOne();
 
         if (currentInfo == null) throw Error("Failed to fetch election info");
 
@@ -338,13 +338,13 @@ export default class ElectionManager extends Module {
                 "Election is scheduled for the past. This will not end well."
             );
 
-        await currentInfo.deleteOne().exec();
+        await currentInfo.deleteOne();
         await newElectionInfo.save();
 
         await this.run();
 
-        await ElectionCandidate.deleteMany().exec();
-        await ElectionVote.deleteMany().exec();
+        await ElectionCandidate.deleteMany();
+        await ElectionVote.deleteMany();
 
         return nextElectionTime;
     }

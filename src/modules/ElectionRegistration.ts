@@ -56,7 +56,7 @@ export default class ElectionRegistration extends Module {
         const candidate = i.member;
         const runningMate = i.guild.members.cache.get(userIds[1]);
         const electionInfo = await ElectionInfo.findOne()
-            .exec()
+            
             .catch((err: CallbackError) => {
                 void i.reply({
                     content:
@@ -84,7 +84,7 @@ export default class ElectionRegistration extends Module {
             });
         const existingElectionCandidate = await ElectionCandidate.findOne({
             discordId: candidate?.user.id,
-        }).exec();
+        });
         if (existingElectionCandidate) {
             await i.update({
                 content: "You have already entered this election.",
@@ -133,8 +133,8 @@ export default class ElectionRegistration extends Module {
                 content: "Oops. Looks like something broke.",
                 ephemeral: true,
             });
-        if (runningAsPrimary) await runningAsPrimary.deleteOne().exec();
-        if (runningAsSecondary) await runningAsSecondary.deleteOne().exec();
+        if (runningAsPrimary) await runningAsPrimary.deleteOne();
+        if (runningAsSecondary) await runningAsSecondary.deleteOne();
 
         await i.update({ content: "Confirmed", components: [] });
 
@@ -251,7 +251,7 @@ export default class ElectionRegistration extends Module {
                     allowedRoles: [config.citizen_role],
                     executor: async (i: ChatInputCommandInteraction) => {
                         const electionInfo =
-                            await ElectionInfo.findOne().exec();
+                            await ElectionInfo.findOne();
                         if (electionInfo?.currentPhase == 0)
                             return i.reply({
                                 content:
@@ -304,7 +304,7 @@ export default class ElectionRegistration extends Module {
                 listrunning: {
                     executor: async (i: ChatInputCommandInteraction) => {
                         const candidates =
-                            await ElectionCandidate.find().exec();
+                            await ElectionCandidate.find();
 
                         if (candidates.length == 0) {
                             await i.reply({

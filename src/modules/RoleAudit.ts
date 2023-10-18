@@ -84,7 +84,7 @@ export default class RoleAudit extends Module {
         for (const member of guild!.members.cache.values()) {
             const account = await Account.findOne({
                 discordId: member.id,
-            }).exec();
+            });
 
             const hasVerifiedRole = member.roles.cache.has(
                 config.verified_role
@@ -121,7 +121,7 @@ export default class RoleAudit extends Module {
             await Account.updateOne(
                 { discordId: member.id },
                 { roles: roles }
-            ).exec();
+            );
         }
     }
 }

@@ -59,7 +59,7 @@ export default class ElectionVoting extends Module {
                 ephemeral: true,
             });
 
-        const electionPhase = await ElectionInfo.findOne().exec();
+        const electionPhase = await ElectionInfo.findOne();
         if (electionPhase?.currentPhase != 2)
             return i.reply({
                 content: "Voting is not currently open.",
@@ -93,7 +93,7 @@ export default class ElectionVoting extends Module {
         if (page == 0 && !this.draftBallots.get(user.id)) {
             const previousVote = await ElectionVote.findOne({
                 discordId: user.id,
-            }).exec();
+            });
             if (previousVote) {
                 this.draftBallots.set(
                     user.id,
@@ -102,11 +102,11 @@ export default class ElectionVoting extends Module {
             }
         }
 
-        const electionPhase = await ElectionInfo.findOne().exec();
+        const electionPhase = await ElectionInfo.findOne();
         if (electionPhase?.currentPhase != 2)
             return { content: "Voting is not currently open.", components: [] };
 
-        const candidates = await ElectionCandidate.find().exec();
+        const candidates = await ElectionCandidate.find();
         const candidatesFormattedAsMenuOptions: SelectMenuComponentOptionData[] =
             [];
         for (const candidate of candidates) {
@@ -199,7 +199,7 @@ export default class ElectionVoting extends Module {
 
     async recordVotePreference(i: SelectMenuInteraction) {
         const preference = parseInt(i.customId.split("-")[1]);
-        const numberOfCandidates = (await ElectionInfo.find().exec()).length;
+        const numberOfCandidates = (await ElectionInfo.find()).length;
         const ballot = this.draftBallots.get(i.user.id)
             ? this.draftBallots.get(i.user.id)!
             : Array<string | null>(numberOfCandidates).fill(null);
@@ -212,7 +212,7 @@ export default class ElectionVoting extends Module {
     }
 
     async submitVote(i: ButtonInteraction) {
-        const candidates = await ElectionCandidate.find().exec();
+        const candidates = await ElectionCandidate.find();
 
         const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder()
@@ -264,7 +264,7 @@ export default class ElectionVoting extends Module {
                 components: [],
             });
 
-        const electionPhase = await ElectionInfo.findOne().exec();
+        const electionPhase = await ElectionInfo.findOne();
         if (electionPhase?.currentPhase != 2)
             return i.update({
                 content: "Voting is not currently open.",
@@ -285,7 +285,7 @@ export default class ElectionVoting extends Module {
             ),
         });
 
-        await ElectionVote.deleteOne({ discordId: i.user.id }).exec();
+        await ElectionVote.deleteOne({ discordId: i.user.id });
         await vote.save();
 
         await i.update({

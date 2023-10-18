@@ -31,11 +31,11 @@ export default class ElectionCounter extends Module {
     async commenceCount() {
         this.countNumber = 0;
         this.votes = {};
-        this.candidates = (await ElectionCandidate.find().exec()).map(
+        this.candidates = (await ElectionCandidate.find()).map(
             (c) => c.discordId!
         );
 
-        const votesRaw = await ElectionVote.find().exec();
+        const votesRaw = await ElectionVote.find();
         for (const vote of votesRaw) {
             const ballot = (vote.preferences! as unknown as string[]).filter(
                 (p) => this.candidates.includes(p)
@@ -200,6 +200,7 @@ export default class ElectionCounter extends Module {
                 }
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete this.votes[candidate];
         }
 

@@ -32,7 +32,7 @@ export default class Auth extends Module {
         try {
             if (this.nameCache.has(id)) return this.nameCache.get(id);
 
-            const account = await Account.findOne({ discordId: id }).exec();
+            const account = await Account.findOne({ discordId: id });
 
             if (!account?.minecraftUUID) return undefined;
 
@@ -172,10 +172,10 @@ export default class Auth extends Module {
                     const role = i.guild.roles.cache.get(config.verified_role);
                     await member?.roles.add(role!);
 
-                    if (await Account.exists({ discordId: i.user.id }).exec())
+                    if (await Account.exists({ discordId: i.user.id }))
                         await Account.deleteOne({
                             discordId: i.user.id,
-                        }).exec();
+                        });
                     const acnt = new Account({
                         discordId: i.user.id,
                         minecraftUUID: uuid,

@@ -7,7 +7,6 @@ import {
     SlashCommandBuilder,
     TextChannel,
 } from "discord.js";
-import { request } from "undici";
 import { config } from "..";
 import Account from "../schema/Account";
 import Town from "../schema/Town";
@@ -27,18 +26,14 @@ export default class Info extends Module {
     }
 
     async getTownByName(name: string) {
-        const result = await request(
+        /*const result = await request(
             "https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World",
             { maxRedirections: 1 }
-        );
-        let fullBody = "";
-
-        for await (const part of result.body) {
-            fullBody += part;
-        }
+        );*/
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const towns = JSON.parse(fullBody) as Record<string, any>[];
+        const towns = (await axios.get("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World", {maxRedirects: 1})).data as Record<string, any>[];
+
         for (const townData of towns) {
             if (townData["Town Name"] == name) {
                 return townData;
@@ -100,7 +95,7 @@ export default class Info extends Module {
                             .setTitle(name)
                             .addFields([
                                 { name: "Mayor", value: mayor },
-                                { name: "Deputy Mayor", value: depMayor },
+                                { name: "Deputy Mayor", value: depMayor ?? "_none_" },
                                 { name: "Coords", value: coords },
                             ])
                             .setColor(Colors.Blurple);
@@ -114,7 +109,7 @@ export default class Info extends Module {
 
                         const account = await Account.findOne({
                             discordId: i.user.id,
-                        }).exec();
+                        });
                         if (!account)
                             return i.editReply({
                                 content:
@@ -131,7 +126,7 @@ export default class Info extends Module {
                             });
 
                         if (
-                            (await Town.findOne({ name: townName }).exec()) !=
+                            (await Town.findOne({ name: townName })) !=
                             null
                         )
                             return i.editReply({
@@ -150,7 +145,6 @@ export default class Info extends Module {
                             (await this.auth?.getMinecraftNameFromDiscordId(
                                 i.user.id
                             )) ?? "";
-
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                         const memberData: Record<string, string>[] = (
                             await axios.get(

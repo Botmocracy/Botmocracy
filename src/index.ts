@@ -61,10 +61,13 @@ client.on("ready", async (client) => {
         value.onModulesLoaded(modules);
     });
 
-    await rest.put(Routes.applicationCommands(client.user.id), {
-        body: slashCommands,
-    });
-    logger.info(`${slashCommands.length} application commands reloaded`);
+
+    if (!process.env.DEV || process.env.RELOAD_CMDS) {
+        await rest.put(Routes.applicationCommands(client.user.id), {
+            body: slashCommands,
+        });
+        logger.info(`${slashCommands.length} application commands reloaded`);
+    }
 });
 
 void client.login(process.env.TOKEN);
