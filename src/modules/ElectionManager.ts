@@ -125,7 +125,7 @@ export default class ElectionManager extends Module {
                 "Unable to update election phase: Info fetch failed"
             );
 
-        await currentInfo.deleteOne().exec();
+        await currentInfo.deleteOne();
 
         const newInfo = new ElectionInfo({
             currentPhase: phase,
