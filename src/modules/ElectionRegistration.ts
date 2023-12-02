@@ -8,11 +8,13 @@ import checkCitizenship from "../util/check-citizenship";
 import Module from "./abstract/Module";
 import Auth from "./Auth";
 import timestring from "timestring";
+import ElectionManager from "./ElectionManager";
 
 export default class ElectionRegistration extends Module {
     name = "ElectionRegistration";
 
     authModule!: Auth;
+    electionManager!: ElectionManager;
 
     onEnable(): void {
         this.logger.info("Enabled");
@@ -32,6 +34,7 @@ export default class ElectionRegistration extends Module {
 
     onModulesLoaded(modules: Map<string, Module>): void {
         this.authModule = modules.get("Auth") as Auth;
+        this.electionManager = modules.get("ElectionManager") as ElectionManager;
     }
 
     confirmCandidacy(i: ButtonInteraction) {
@@ -118,6 +121,7 @@ export default class ElectionRegistration extends Module {
         if (!updatesChannel) return;
 
         updatesChannel.send(`<@${i.user.id}> has called an early election. It will begin at the top of the hour.`);
+        this.electionManager.run(); // Restart election manager to load new times
         i.editReply({content: "Done. It will begin soon:tm:", components: []});
     }
 
