@@ -7,6 +7,7 @@ import ElectionInfo from "../schema/ElectionInfo";
 import checkCitizenship from "../util/check-citizenship";
 import Module from "./abstract/Module";
 import Auth from "./Auth";
+import timestring from "timestring";
 
 export default class ElectionRegistration extends Module {
     name = "ElectionRegistration";
@@ -24,7 +25,7 @@ export default class ElectionRegistration extends Module {
                     this.confirmCandidacy(i);
                 } else if (i.customId.startsWith("confirmwithdrawal")) {
                     this.confirmWithdrawal(i);
-                }
+                } else if (i.customId.startsWith("confirmcallelection")) this.confirmCallElection(i);
             }
         });
     }
@@ -94,6 +95,32 @@ export default class ElectionRegistration extends Module {
         updatesChannel.send(`<@${userIds[0]}> has withdrawn <@${userIds[0]}> and <@${userIds[1]}> from the election.`);
     }
 
+    async confirmCallElection(i: ButtonInteraction) {
+        await i.deferUpdate();
+
+        const electionInfo = await ElectionInfo.findOne().exec();
+        if (!electionInfo || electionInfo.processStartTime == null || electionInfo.currentPhase == null) return i.editReply({ content: "Election info is invalid", components: []});
+        if (electionInfo?.processStartTime?.getTime() < Date.now() + timestring("1d", "ms")) return i.editReply({ content: "The election is less than a day away (or already started)!", components: []});
+
+        let newElectionTime = new Date(Date.now() + timestring("1h", "ms"));
+        newElectionTime.setMinutes(0);
+        newElectionTime.setSeconds(0);
+        newElectionTime.setMilliseconds(0);
+        let newInfo = new ElectionInfo({
+            currentPhase: electionInfo.currentPhase,
+            processStartTime: newElectionTime
+        });
+
+        await electionInfo.remove();
+        await newInfo.save();
+
+        const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
+        if (!updatesChannel) return;
+
+        updatesChannel.send(`<@${i.user.id}> has called an early election. It will begin at the top of the hour.`);
+        i.editReply({content: "Done. It will begin soon:tm:", components: []});
+    }
+
     slashCommands = {
         election: {
             cmdBuilder: new SlashCommandBuilder()
@@ -110,7 +137,7 @@ export default class ElectionRegistration extends Module {
                 ))
             .addSubcommand(s => s
                 .setName("withdraw")
-                .setDescription("Withdraw yourself from election candidacy.")
+                .setDescription("Withdraw yourself from election candidacy")
                 .addUserOption(
                     o => o
                         .setName("runningwith")
@@ -119,7 +146,10 @@ export default class ElectionRegistration extends Module {
                 ))
             .addSubcommand(s => s
                 .setName("listrunning")
-                .setDescription("List who's running in the Presidential election")),
+                .setDescription("List who's running in the Presidential election"))
+            .addSubcommand(s => s
+                .setName("call")
+                .setDescription("[President Only] Call an early election")),
             subcommands: {
                 enter: {
                     allowedRoles: [config.citizen_role],
@@ -200,6 +230,20 @@ export default class ElectionRegistration extends Module {
                         }
         
                         i.reply({ content: outputMessage, ephemeral: true });
+                    }
+                },
+                call: {
+                    allowedRoles: [config.president_role],
+                    executor: async (i: CommandInteraction) => {
+                        const row = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId(`confirmcallelection`)
+                                    .setStyle("DANGER")
+                                    .setLabel("Confirm")
+                            );
+
+                        i.reply({ content: "Are you sure you want to call an early election? This cannot be undone.", ephemeral: true, components: [row] });
                     }
                 }
             }
