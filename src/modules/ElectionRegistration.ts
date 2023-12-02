@@ -14,7 +14,7 @@ import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import checkCitizenship from "../util/check-citizenship";
 import Auth from "./Auth";
-import Module from "./abstract/Module";
+import timestring from "timestring";
 
 export default class ElectionRegistration extends Module {
     name = "ElectionRegistration";
@@ -31,8 +31,8 @@ export default class ElectionRegistration extends Module {
                 if (i.customId.startsWith("confirmcandidacy")) {
                     await this.confirmCandidacy(i);
                 } else if (i.customId.startsWith("confirmwithdrawal")) {
-                    await this.confirmWithdrawal(i);
-                }
+                    this.confirmWithdrawal(i);
+                } else if (i.customId.startsWith("confirmcallelection")) this.confirmCallElection(i);
             }
         });
     }
@@ -148,48 +148,61 @@ export default class ElectionRegistration extends Module {
         );
     }
 
+    async confirmCallElection(i: ButtonInteraction) {
+        await i.deferUpdate();
+
+        const electionInfo = await ElectionInfo.findOne().exec();
+        if (!electionInfo || electionInfo.processStartTime == null || electionInfo.currentPhase == null) return i.editReply({ content: "Election info is invalid", components: []});
+        if (electionInfo?.processStartTime?.getTime() < Date.now() + timestring("1d", "ms")) return i.editReply({ content: "The election is less than a day away (or already started)!", components: []});
+
+        let newElectionTime = new Date(Date.now() + timestring("1h", "ms"));
+        newElectionTime.setMinutes(0);
+        newElectionTime.setSeconds(0);
+        newElectionTime.setMilliseconds(0);
+        let newInfo = new ElectionInfo({
+            currentPhase: electionInfo.currentPhase,
+            processStartTime: newElectionTime
+        });
+
+        await electionInfo.remove();
+        await newInfo.save();
+
+        const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
+        if (!updatesChannel) return;
+
+        updatesChannel.send(`<@${i.user.id}> has called an early election. It will begin at the top of the hour.`);
+        i.editReply({content: "Done. It will begin soon:tm:", components: []});
+    }
+
     slashCommands = {
         election: {
             cmdBuilder: new SlashCommandBuilder()
-                .setName("election")
-                .setDescription(
-                    "Enter, withdraw or list candidates in the Presidential elections"
-                )
-                .addSubcommand((s) =>
-                    s
-                        .setName("enter")
-                        .setDescription("Enter the Presidential election")
-                        .addUserOption((o) =>
-                            o
-                                .setName("runningmate")
-                                .setDescription(
-                                    "The person who will be vice president if you are elected"
-                                )
-                                .setRequired(true)
-                        )
-                )
-                .addSubcommand((s) =>
-                    s
-                        .setName("withdraw")
-                        .setDescription(
-                            "Withdraw yourself from election candidacy."
-                        )
-                        .addUserOption((o) =>
-                            o
-                                .setName("runningwith")
-                                .setDescription(
-                                    "The person you are running with"
-                                )
-                                .setRequired(true)
-                        )
-                )
-                .addSubcommand((s) =>
-                    s
-                        .setName("listrunning")
-                        .setDescription(
-                            "List who's running in the Presidential election"
-                        )
-                ),
+            .setName("election")
+            .setDescription("Enter, withdraw or list candidates in the Presidential elections")
+            .addSubcommand(s => s
+                .setName("enter")
+                .setDescription("Enter the Presidential election")
+                .addUserOption(
+                    o => o
+                        .setName("runningmate")
+                        .setDescription("The person who will be vice president if you are elected")
+                        .setRequired(true)
+                ))
+            .addSubcommand(s => s
+                .setName("withdraw")
+                .setDescription("Withdraw yourself from election candidacy")
+                .addUserOption(
+                    o => o
+                        .setName("runningwith")
+                        .setDescription("The person you are running with")
+                        .setRequired(true)
+                ))
+            .addSubcommand(s => s
+                .setName("listrunning")
+                .setDescription("List who's running in the Presidential election"))
+            .addSubcommand(s => s
+                .setName("call")
+                .setDescription("[President Only] Call an early election")),
             subcommands: {
                 enter: {
                     allowedRoles: [config.citizen_role],
@@ -314,27 +327,25 @@ export default class ElectionRegistration extends Module {
                             });
                             return;
                         }
-
-                        let outputMessage =
-                            "**Candidates running in this election:**";
-
-                        for (const candidate of candidates) {
-                            outputMessage += `\n**${await this.authModule.getMinecraftOrDiscordName(
-                                candidate.discordId!,
-                                true
-                            )}** for President; **${await this.authModule.getMinecraftOrDiscordName(
-                                candidate.runningMateDiscordId!,
-                                true
-                            )}** for Vice President.`;
-                        }
-
-                        await i.reply({
-                            content: outputMessage,
-                            ephemeral: true,
-                        });
-                    },
+        
+                        i.reply({ content: outputMessage, ephemeral: true });
+                    }
                 },
-            },
-        },
-    };
+                call: {
+                    allowedRoles: [config.president_role],
+                    executor: async (i: CommandInteraction) => {
+                        const row = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId(`confirmcallelection`)
+                                    .setStyle("DANGER")
+                                    .setLabel("Confirm")
+                            );
+
+                        i.reply({ content: "Are you sure you want to call an early election? This cannot be undone.", ephemeral: true, components: [row] });
+                    }
+                }
+            }
+        }
+    }
 }
