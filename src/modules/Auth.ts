@@ -132,7 +132,7 @@ export default class Auth extends Module {
                     await acnt.save();
 
                     i.editReply({ content: "Verified!" });
-                    (this.client?.channels.cache.get(config.welcome_channel)! as TextChannel).send(`${i.user} welcome! Check out <#995567687080091769> for information on joining.`);
+                    (this.client?.channels.cache.get(config.welcome_channel)! as TextChannel).send(`${i.user} welcome! Check out <#995567687080091769> for information on becoming a citizen.`);
                 } else i.editReply({ content: "You do not seem to be an MRT member." });
             }
         }
