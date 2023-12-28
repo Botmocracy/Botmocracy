@@ -125,7 +125,8 @@ export default class ElectionManager extends Module {
             content: [
                 `<@&${config.citizen_role}> **Presidential Election voting is now open!**`,
                 `Press the button below before ${this.timestamp(this.votingEnd!)} to have your say in choosing the next President!`,
-                `You can use \`/election listrunning\` at any time to see who has entered.`
+                `You can use \`/election listrunning\` at any time to see who has entered.`,
+                `*PS: You have a better chance of winning if you get your friends to join and vote for you ;)*`
             ].join("\n"), components: [row]
         });
     }
