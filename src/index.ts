@@ -54,4 +54,11 @@ client.on('ready', async (client) => {
     logger.info(`${slashCommands.length} application commands reloaded`);
 });
 
+client.on("interactionCreate", i => {
+    if (!i.guild) return;
+    if (i.guild.id != config.guild) return;
+
+    logger.info(`Interaction received with type ${i.type} and id ${(i as any).customId} from ${i.user.tag}`);
+});
+
 client.login(process.env.TOKEN);
