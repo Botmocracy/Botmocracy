@@ -308,13 +308,8 @@ export default class ElectionManager extends Module {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             .catch((err) => this.logger.error(err));
 
-        const governmentChatChannel = this.client!.channels.cache.get(
-            config.government_chat_channel
-        ) as TextChannel | undefined;
-        if (governmentChatChannel)
-            await governmentChatChannel.send(
-                `<@${winners[0]}> <@${winners[1]}> Welcome! You may want to check through the settings of each channel (and category) to ensure that the last government haven't given themselves any special permissions :wink:`
-            );
+        const governmentChatChannel: TextChannel = this.client!.channels.cache.get(config.government_chat_channel) as TextChannel;
+        if (governmentChatChannel) governmentChatChannel.send(`<@${winners[0]}> <@${winners[1]}> Welcome! You may want to check through the settings of each channel (and category) to ensure that the last government haven't given themselves any special permissions :wink:. If at any point you no longer want to be President, please use \`/election call\` to give others who do want this role a chance.`);
     }
 
     async scheduleNextElection(): Promise<number> {
