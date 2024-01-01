@@ -188,18 +188,20 @@ export default class ElectionVoting extends Module {
         const electionPhase = await ElectionInfo.findOne().exec();
         if (electionPhase?.currentPhase != 2) return i.update({ content: "Voting is not currently open.", components: [] });
 
-        const preferences = this.draftBallots.get(i.user.id);
-        if (!preferences) return i.update({ content: "Your draft preferences seem to have not been saved. You will need to re-enter them by clicking on the `Vote` button again." })
+        let preferences = this.draftBallots.get(i.user.id);
+        if (!preferences) return i.update({ content: "Your draft preferences seem to have not been saved. You will need to re-enter them by clicking on the `Vote` button again. Contact Dinty if this issue persists." })
+
+        preferences = preferences.filter((pref, pos) => pref != null && preferences!.indexOf(pref) == pos);
 
         const vote = new ElectionVote({
             discordId: i.user.id,
-            preferences: preferences.filter((pref, pos) => pref != null && preferences.indexOf(pref) == pos)
+            preferences: preferences
         });
 
         await ElectionVote.deleteOne({ discordId: i.user.id }).exec();
         await vote.save();
 
         i.update({ content: "Saved! Thanks for voting!", components: [] });
-        this.logger.info("Saved vote for " + i.user.tag);
+        this.logger.info(`Saved vote from ${i.user.tag} with ${preferences.length} preferences`);
     }
 }
