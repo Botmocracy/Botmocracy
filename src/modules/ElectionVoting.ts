@@ -284,7 +284,7 @@ export default class ElectionVoting extends Module {
         await ElectionVote.deleteOne({ discordId: i.user.id });
         await vote.save();
 
-        i.update({ content: "Saved! Thanks for voting!", components: [] });
+        void i.update({ content: "Saved! Thanks for voting!", components: [] });
         this.logger.info(`Saved vote from ${i.user.tag} with ${preferences.length} preferences`);
     }
 }

@@ -5,25 +5,25 @@
     "pm2run": "pm2 start ts-node -- -P tsconfig.json ./src/index.ts"
   },
   "dependencies": {
-    "axios": "^1.5.1",
-    "capture-console": "^1.0.1",
+    "axios": "^1.6.3",
+    "capture-console": "^1.0.2",
     "colors": "^1.4.0",
-    "discord.js": "^14.13.0",
+    "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "long-timeout": "^0.1.1",
-    "mongoose": "^7.6.3",
+    "mongoose": "^7.6.7",
     "timestring": "^7.0.0",
-    "ts-node": "^10.9.1",
-    "undici": "^5.26.3"
+    "ts-node": "^10.9.2",
+    "undici": "^5.28.2"
   },
   "devDependencies": {
-    "@types/capture-console": "^1.0.3",
-    "@types/long-timeout": "^0.1.1",
-    "@types/node": "^20.8.7",
-    "@types/timestring": "^6.0.3",
-    "@typescript-eslint/eslint-plugin": "^6.8.0",
-    "eslint": "^8.51.0",
-    "typescript": "^5.2.2"
+    "@types/capture-console": "^1.0.5",
+    "@types/long-timeout": "^0.1.2",
+    "@types/node": "^20.10.6",
+    "@types/timestring": "^6.0.5",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",

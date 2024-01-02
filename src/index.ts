@@ -77,4 +77,4 @@ client.on("interactionCreate", i => {
     logger.info(`Interaction received with type ${i.type} and id ${(i as any).customId} from ${i.user.tag}`);
 });
 
-client.login(process.env.TOKEN);
+void client.login(process.env.TOKEN);

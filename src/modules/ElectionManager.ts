@@ -309,7 +309,7 @@ export default class ElectionManager extends Module {
             .catch((err) => this.logger.error(err));
 
         const governmentChatChannel: TextChannel = this.client!.channels.cache.get(config.government_chat_channel) as TextChannel;
-        if (governmentChatChannel) governmentChatChannel.send(`<@${winners[0]}> <@${winners[1]}> Welcome! You may want to check through the settings of each channel (and category) to ensure that the last government haven't given themselves any special permissions :wink:. If at any point you no longer want to be President, please use \`/election call\` to give others who do want this role a chance.`);
+        if (governmentChatChannel) void governmentChatChannel.send(`<@${winners[0]}> <@${winners[1]}> Welcome! You may want to check through the settings of each channel (and category) to ensure that the last government haven't given themselves any special permissions :wink:. If at any point you no longer want to be President, please use \`/election call\` to give others who do want this role a chance.`);
     }
 
     async scheduleNextElection(): Promise<number> {

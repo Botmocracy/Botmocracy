@@ -4,6 +4,7 @@ import {
     ButtonInteraction,
     ButtonStyle,
     ChatInputCommandInteraction,
+    CommandInteraction,
     GuildMember,
     SlashCommandBuilder,
     TextChannel,
@@ -16,6 +17,7 @@ import checkCitizenship from "../util/check-citizenship";
 import Auth from "./Auth";
 import timestring from "timestring";
 import ElectionManager from "./ElectionManager";
+import Module from "./abstract/Module";
 
 export default class ElectionRegistration extends Module {
     name = "ElectionRegistration";
@@ -33,8 +35,8 @@ export default class ElectionRegistration extends Module {
                 if (i.customId.startsWith("confirmcandidacy")) {
                     await this.confirmCandidacy(i);
                 } else if (i.customId.startsWith("confirmwithdrawal")) {
-                    this.confirmWithdrawal(i);
-                } else if (i.customId.startsWith("confirmcallelection")) this.confirmCallElection(i);
+                    void this.confirmWithdrawal(i);
+                } else if (i.customId.startsWith("confirmcallelection")) void this.confirmCallElection(i);
             }
         });
     }
@@ -158,24 +160,24 @@ export default class ElectionRegistration extends Module {
         if (!electionInfo || electionInfo.processStartTime == null || electionInfo.currentPhase == null) return i.editReply({ content: "Election info is invalid", components: []});
         if (electionInfo?.processStartTime?.getTime() < Date.now() + timestring("1d", "ms")) return i.editReply({ content: "The election is less than a day away (or already started)!", components: []});
 
-        let newElectionTime = new Date(Date.now() + timestring("1h", "ms"));
+        const newElectionTime = new Date(Date.now() + timestring("1h", "ms"));
         newElectionTime.setMinutes(0);
         newElectionTime.setSeconds(0);
         newElectionTime.setMilliseconds(0);
-        let newInfo = new ElectionInfo({
+        const newInfo = new ElectionInfo({
             currentPhase: electionInfo.currentPhase,
             processStartTime: newElectionTime
         });
 
-        await electionInfo.remove();
+        await electionInfo.deleteOne();
         await newInfo.save();
 
         const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
         if (!updatesChannel) return;
 
-        updatesChannel.send(`<@${i.user.id}> has called an early election. It will begin at the top of the hour.`);
-        this.electionManager.run(); // Restart election manager to load new times
-        i.editReply({content: "Done. It will begin soon:tm:", components: []});
+        void updatesChannel.send(`<@${i.user.id}> has called an early election. It will begin at the top of the hour.`);
+        void this.electionManager.run(); // Restart election manager to load new times
+        void i.editReply({content: "Done. It will begin soon:tm:", components: []});
     }
 
     slashCommands = {
@@ -320,33 +322,34 @@ export default class ElectionRegistration extends Module {
                 },
                 listrunning: {
                     executor: async (i: ChatInputCommandInteraction) => {
-                        const candidates =
-                            await ElectionCandidate.find();
-
-                        if (candidates.length == 0) {
-                            await i.reply({
-                                content:
-                                    "Unable to fetch the candidates list. Please try again later.",
-                                ephemeral: true,
-                            });
+                        const candidates = await ElectionCandidate.find();
+        
+                        if (!candidates) {
+                            await i.reply({ content: "Unable to fetch the candidates list. Please try again later.", ephemeral: true });
                             return;
+                        } 
+        
+                        let outputMessage = "**Candidates running in this election:**";
+        
+                        for (const candidate of candidates) {
+                            outputMessage += `\n**${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!, true)}** for President; **${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!, true)}** for Vice President.`;
                         }
         
-                       await i.reply({ content: outputMessage, ephemeral: true });
+                        await i.reply({ content: outputMessage, ephemeral: true });
                     }
                 },
                 call: {
                     allowedRoles: [config.president_role],
                     executor: async (i: CommandInteraction) => {
-                        const row = new MessageActionRow()
+                        const row = new ActionRowBuilder<ButtonBuilder>()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId(`confirmcallelection`)
-                                    .setStyle("DANGER")
+                                    .setStyle(ButtonStyle.Danger)
                                     .setLabel("Confirm")
                             );
 
-                        i.reply({ content: "Are you sure you want to call an early election? This cannot be undone.", ephemeral: true, components: [row] });
+                        await i.reply({ content: "Are you sure you want to call an early election? This cannot be undone.", ephemeral: true, components: [row] });
                     }
                 }
             }
