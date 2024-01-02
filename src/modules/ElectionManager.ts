@@ -254,7 +254,7 @@ export default class ElectionManager extends Module {
           { roles: newRoles },
         );
     }
-
+    
     for (const member of guild!.members.cache.values()!) {
       if (member.roles.cache.hasAny(...electedRoleIds) && !member.user.bot)
         await member.roles.remove(electedRoleIds, "Transfer of power");
