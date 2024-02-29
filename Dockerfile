@@ -1,4 +1,4 @@
-FROM node:20.1-debian
+FROM node:20.11.1-alpine
 
 ENV HOME=/home/app
 
