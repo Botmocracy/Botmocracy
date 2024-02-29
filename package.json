@@ -26,5 +26,8 @@
     "erlpack": "^0.1.4",
     "utf-8-validate": "^5.0.9"
   },
+  "scripts": {
+    "start": "ts-node src"
+  },
   "main": "src/index.ts"
 }
