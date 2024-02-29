@@ -1,9 +1,13 @@
 import * as dotenv from "dotenv";
+import * as fs from "fs";
 
-dotenv.config();
+if(fs.existsSync(".env")) {
+    dotenv.config();
+}
+
 
 import { REST } from "@discordjs/rest";
-import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
+import { Routes } from "discord-api-types/v10";
 import { Client, Intents } from "discord.js";
 import { readdirSync, readFileSync } from "fs";
 import mongoose from 'mongoose';
@@ -32,7 +36,7 @@ client.on('ready', async (client) => {
     const moduleFiles = readdirSync("src/modules");
 
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN!);
-    let slashCommands: RESTPostAPIApplicationCommandsJSONBody[] = [];
+    let slashCommands = [];
 
     for (const f of moduleFiles) {
         if (!f.endsWith(".ts")) continue; // Ignore non-ts files
