@@ -1,4 +1,4 @@
-FROM node:20.11.1-alpine
+FROM node:18.4.0-alpine
 
 ENV HOME=/home/app
 
