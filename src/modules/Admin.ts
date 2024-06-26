@@ -1,8 +1,7 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, MessageActionRow, Modal, ModalSubmitInteraction, TextInputComponent } from "discord.js";
+import { exec } from 'child_process';
+import { ActionRowBuilder, ChatInputCommandInteraction, CommandInteraction, ModalBuilder, ModalSubmitInteraction, SlashCommandBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { config } from "..";
 import Module from "./abstract/Module";
-import { exec } from 'child_process';
 
 export default class Admin extends Module {
     name = "Admin";
@@ -20,7 +19,7 @@ export default class Admin extends Module {
         const idSplit = i.customId.split("-");
         const channelId = idSplit[1];
         const channel = this.client?.channels.cache.get(channelId);
-        if(!channel?.isText()) return i.reply({ content: "Imagine", ephemeral: true });
+        if(!channel?.isTextBased()) return i.reply({ content: "Imagine", ephemeral: true });
         channel.send(i.fields.getTextInputValue("text"));
         i.reply({content: "Done", ephemeral: true});
     }
@@ -28,7 +27,7 @@ export default class Admin extends Module {
     slashCommands = {
         superuser: {
             cmdBuilder: new SlashCommandBuilder().setName("superuser").setDescription("Adds le admin role. Can only be used by binty, ain and fishe"),
-            async executor(i: CommandInteraction) {
+            executor: async (i: ChatInputCommandInteraction) =>{
                 if (!i.inGuild()) return;
                 const allowedPeople = config.admins;
                 if (!allowedPeople.includes(i.user.id)) return i.reply({ content: "You cannot use this.", ephemeral: true });
@@ -47,7 +46,7 @@ export default class Admin extends Module {
         },
         reloadandrestart: {
             cmdBuilder: new SlashCommandBuilder().setName("reloadandrestart").setDescription("Runs git pull & restarts the bot").setDefaultMemberPermissions(8),
-            async executor(i: CommandInteraction) {
+            executor: async (i: CommandInteraction) => {
                 if (!i.inGuild()) return;
                 if (!config.admins.includes(i.user.id)) return i.reply({ content: "You cannot use this.", ephemeral: true });
 
@@ -71,7 +70,7 @@ export default class Admin extends Module {
             cmdBuilder: new SlashCommandBuilder().setName("eval_code").setDescription("Evaluates code").setDefaultMemberPermissions(8)
                 .addStringOption(o => o.setName("code").setDescription("The code 2 run")),
             
-            async executor(i: CommandInteraction) {
+            executor: async (i: ChatInputCommandInteraction) =>{
                 if (!i.inGuild()) return;
                 if (!config.admins.includes(i.user.id)) return i.reply({ content: "You cannot use this.", ephemeral: true });
 
@@ -88,17 +87,17 @@ export default class Admin extends Module {
             cmdBuilder: new SlashCommandBuilder().setName("say").setDescription("Says shit").setDefaultMemberPermissions(8)
                 .addChannelOption(o => o.setName("channel").setDescription("The channel to send")),
 
-            async executor(i: CommandInteraction) {
+            executor: async (i: ChatInputCommandInteraction) =>{
                 if (!i.inGuild()) return;
                 const allowedPeople = ["644052617500164097", "468534859611111436", "716779626759716914"];
                 if (!allowedPeople.includes(i.user.id)) return i.reply({ content: "You cannot use this.", ephemeral: true });
 
-                const actionRow = new MessageActionRow<TextInputComponent>().setComponents(
-                    new TextInputComponent().setCustomId("text").setLabel("Message").setMaxLength(2000).setStyle("PARAGRAPH")
+                const actionRow = new ActionRowBuilder<TextInputBuilder>().setComponents(
+                    new TextInputBuilder().setCustomId("text").setLabel("Message").setMaxLength(2000).setStyle(TextInputStyle.Paragraph)
                 );
 
                 const channel = i.options.getChannel("channel", true);
-                const modal = new Modal().addComponents(actionRow).setTitle("Message Modal").setCustomId(`message-${channel.id}`);
+                const modal = new ModalBuilder().addComponents(actionRow).setTitle("Message Modal").setCustomId(`message-${channel.id}`);
 
                 i.showModal(modal);
             }

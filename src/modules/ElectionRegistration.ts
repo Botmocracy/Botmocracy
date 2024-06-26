@@ -1,13 +1,12 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { ButtonInteraction, CommandInteraction, GuildMember, MessageActionRow, MessageButton, TextChannel } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, GuildMember, SlashCommandBuilder, TextChannel } from "discord.js";
 import { CallbackError } from "mongoose";
+import timestring from "timestring";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
 import ElectionInfo from "../schema/ElectionInfo";
 import checkCitizenship from "../util/check-citizenship";
 import Module from "./abstract/Module";
 import Auth from "./Auth";
-import timestring from "timestring";
 import ElectionManager from "./ElectionManager";
 
 export default class ElectionRegistration extends Module {
@@ -87,8 +86,8 @@ export default class ElectionRegistration extends Module {
         const runningAsSecondary = await ElectionCandidate.findOne({ discordId: userIds[1], runningMateDiscordId: userIds[0] });
 
         if (!runningAsPrimary && !runningAsSecondary) return i.reply({ content: "Oops. Looks like something broke.", ephemeral: true });
-        if (runningAsPrimary) runningAsPrimary.remove();
-        if (runningAsSecondary) runningAsSecondary.remove();
+        if (runningAsPrimary) runningAsPrimary.deleteOne();
+        if (runningAsSecondary) runningAsSecondary.deleteOne();
 
         i.update({ content: "Confirmed", components: [] });
 
@@ -114,7 +113,7 @@ export default class ElectionRegistration extends Module {
             processStartTime: newElectionTime
         });
 
-        await electionInfo.remove();
+        await electionInfo.deleteOne();
         await newInfo.save();
 
         const updatesChannel = (this.client?.channels.cache.get(config.election_updates_channel) as TextChannel | null);
@@ -157,7 +156,7 @@ export default class ElectionRegistration extends Module {
             subcommands: {
                 enter: {
                     allowedRoles: [config.citizen_role],
-                    executor: async (i: CommandInteraction) => {
+                    executor: async (i: ChatInputCommandInteraction) => {
                         if (!i.guild) {
                             i.reply({ content: "You can't use this in a DM", ephemeral: true });
                             return;
@@ -174,11 +173,11 @@ export default class ElectionRegistration extends Module {
                         if (runningMate.id == this.client?.user.id)
                             return i.reply({ content: "I don't want to run with you, I'm a bot!", ephemeral: true });
         
-                        const row = new MessageActionRow()
+                        const row = new ActionRowBuilder<ButtonBuilder>()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId(`confirmcandidacy-${i.user.id}-${runningMate.id}`)
-                                    .setStyle("SUCCESS")
+                                    .setStyle(ButtonStyle.Success)
                                     .setLabel("Confirm")
                             );
         
@@ -191,7 +190,7 @@ export default class ElectionRegistration extends Module {
                 },
                 withdraw: {
                     allowedRoles: [config.citizen_role],
-                    executor: async (i: CommandInteraction) => {
+                    executor: async (i: ChatInputCommandInteraction) => {
                         const electionInfo = await ElectionInfo.findOne().exec();
                         if (electionInfo?.currentPhase == 0) return i.reply({ content: "There isn't currently an election running.", ephemeral: true });
         
@@ -203,11 +202,11 @@ export default class ElectionRegistration extends Module {
         
                         if (!runningAsPrimary && !runningAsSecondary) return i.reply({ content: "You don't seem to be running with that person.", ephemeral: true });
         
-                        const row = new MessageActionRow()
+                        const row = new ActionRowBuilder<ButtonBuilder>()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId(`confirmwithdrawal-${i.user.id}-${runningWith.id}`)
-                                    .setStyle("DANGER")
+                                    .setStyle(ButtonStyle.Danger)
                                     .setLabel("Confirm")
                             );
         
@@ -219,7 +218,7 @@ export default class ElectionRegistration extends Module {
                     }
                 },
                 listrunning: {
-                    executor: async (i: CommandInteraction) => {
+                    executor: async (i: ChatInputCommandInteraction) => {
                         const candidates = await ElectionCandidate.find().exec();
         
                         if (!candidates) {
@@ -238,12 +237,12 @@ export default class ElectionRegistration extends Module {
                 },
                 call: {
                     allowedRoles: [config.president_role],
-                    executor: async (i: CommandInteraction) => {
-                        const row = new MessageActionRow()
+                    executor: async (i: ChatInputCommandInteraction) => {
+                        const row = new ActionRowBuilder<ButtonBuilder>()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId(`confirmcallelection`)
-                                    .setStyle("DANGER")
+                                    .setStyle(ButtonStyle.Danger)
                                     .setLabel("Confirm")
                             );
 

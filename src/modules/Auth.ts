@@ -1,6 +1,5 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import axios from 'axios';
-import { CommandInteraction, GuildMember, PartialGuildMember, Role, RoleResolvable, TextChannel } from "discord.js";
+import { ChatInputCommandInteraction, GuildMember, Role, RoleResolvable, SlashCommandBuilder, TextChannel } from "discord.js";
 import { config } from "..";
 import Account from "../schema/Account";
 import Module from "./abstract/Module";
@@ -90,7 +89,7 @@ export default class Auth extends Module {
                 .setName("verify")
                 .setDescription("Verifies you"),
 
-            executor: async (i: CommandInteraction) => {
+            executor: async (i: ChatInputCommandInteraction) => {
                 if (!i.guild) {
                     i.reply({ content: "You can't use this in a DM", ephemeral: true });
                     return;
