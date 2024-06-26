@@ -1,6 +1,5 @@
 import axios from "axios";
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder, TextChannel } from "discord.js";
-import { request } from "undici";
 import { config } from "..";
 import Account from "../schema/Account";
 import Town from "../schema/Town";
@@ -21,7 +20,7 @@ export default class Info extends Module {
     }
 
     async getTownByName(name: string) {
-        const result = await request("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World", { maxRedirections: 1 });
+        const result = await axios.get("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World", { maxRedirects: 1 });
         let fullBody = '';
 
         for await (const part of result.body) {
