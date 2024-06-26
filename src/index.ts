@@ -6,9 +6,7 @@ if(fs.existsSync(".env")) {
 }
 
 
-import { REST } from "@discordjs/rest";
-import { Routes } from "discord-api-types/v10";
-import { Client, Intents } from "discord.js";
+import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
 import { readdirSync, readFileSync } from "fs";
 import mongoose from 'mongoose';
 import Module from "./modules/abstract/Module";
@@ -21,10 +19,11 @@ export const config: Config = JSON.parse(readFileSync(configFile).toString());
 
 mongoose.connect((process.env.MONGO_STRING as string));
 
-const intents = new Intents();
-intents.add(Intents.FLAGS.GUILD_MESSAGES);
-intents.add(Intents.FLAGS.GUILDS);
-intents.add(Intents.FLAGS.GUILD_MEMBERS);
+const intents = [
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers
+];
 
 const client = new Client({ intents: intents, allowedMentions: { parse: config.allowed_mentions } });
 const logger = new Logger("Index");
@@ -35,7 +34,7 @@ client.on('ready', async (client) => {
     logger.info("Enabling modules");
     const moduleFiles = readdirSync("src/modules");
 
-    const rest = new REST({ version: '10' }).setToken(process.env.TOKEN!);
+    const rest = new REST().setToken(process.env.TOKEN!);
     let slashCommands = [];
 
     for (const f of moduleFiles) {
@@ -46,7 +45,7 @@ client.on('ready', async (client) => {
         modules.set(module.name, module);
         module.initialise(client);
         slashCommands.push(...Object.values(module.slashCommands).map(c => c.cmdBuilder.toJSON()))
-    }
+    }   
     modules.forEach((value) => {
         value.onModulesLoaded(modules);
     });
