@@ -1,4 +1,4 @@
-import { Collection, MessageActionRow, MessageButton, TextChannel } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, TextChannel } from "discord.js";
 import timestring from 'timestring'; // Why can't they just do this like everyone else
 import lt from 'long-timeout';
 import { config } from "..";
@@ -85,7 +85,7 @@ export default class ElectionManager extends Module {
         const currentInfo = await ElectionInfo.findOne().exec();
         if (!currentInfo) throw new Error("Unable to update election phase: Info fetch failed");
 
-        await currentInfo.remove();
+        await currentInfo.deleteOne();
 
         const newInfo = new ElectionInfo({
             currentPhase: phase,
@@ -114,12 +114,12 @@ export default class ElectionManager extends Module {
         if (candidates.length == 0) return this.noElectionCandidatesOrVotes();
 
         this.updateElectionPhase(ElectionPhase.VOTING);
-        const row = new MessageActionRow()
+        const row = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId("electionvote")
                     .setLabel("Vote")
-                    .setStyle("PRIMARY")
+                    .setStyle(ButtonStyle.Primary)
             );
         this.updatesChannel!.send({
             content: [
@@ -161,7 +161,7 @@ export default class ElectionManager extends Module {
             winners: [elected, runningMate]
         });
 
-        await currentElectionInfo?.delete();
+        await currentElectionInfo?.deleteOne();
         newElectionInfo.save();
     }
 
@@ -237,7 +237,7 @@ export default class ElectionManager extends Module {
 
             if (newElectionInfo.processStartTime!.getTime() < Date.now()) return rej("Election is scheduled for the past. This will not end well.")
 
-            await currentInfo.delete();
+            await currentInfo.deleteOne();
             await newElectionInfo.save();
 
             this.run();

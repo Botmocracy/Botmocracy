@@ -10,8 +10,8 @@ export default class DiscordLogger extends Module {
     onEnable() {
         this.logger.info("Enabled");
 
-        capcon.startCapture(process.stdout, s => this.messageBuffer.push(s));
-        capcon.startCapture(process.stderr, s => this.messageBuffer.push(s));
+        capcon.startCapture(process.stdout as any, s => this.messageBuffer.push(s));
+        capcon.startCapture(process.stderr as any, s => this.messageBuffer.push(s));
 
         setInterval(() => {
             const builderStart = "```ansi\n";

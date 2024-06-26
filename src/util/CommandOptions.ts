@@ -1,14 +1,13 @@
-import { SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder } from "@discordjs/builders";
-import { CommandInteraction, PermissionResolvable, RoleResolvable } from "discord.js";
+import { ChatInputCommandInteraction, PermissionResolvable, RoleResolvable, SlashCommandBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder } from "discord.js";
 
 export interface CommandOptions {
-    cmdBuilder: Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">,
-    executor: (i: CommandInteraction) => Promise<void>,
+    cmdBuilder: Omit<SlashCommandBuilder | SlashCommandOptionsOnlyBuilder, "addSubcommand" | "addSubcommandGroup">,
+    executor: (i: ChatInputCommandInteraction) => Promise<unknown>,
     allowedPermissions?: PermissionResolvable[],
     allowedRoles?: RoleResolvable[]
 }
 export interface SubcommandOptions {
-    cmdBuilder: SlashCommandSubcommandsOnlyBuilder,
-    executor?: (i: CommandInteraction) => Promise<void>
+    cmdBuilder: SlashCommandSubcommandsOnlyBuilder | SlashCommandOptionsOnlyBuilder,
+    executor?: (i: ChatInputCommandInteraction) => Promise<unknown>
     subcommands: {[key: string]: Omit<CommandOptions, "cmdBuilder">}
 }
