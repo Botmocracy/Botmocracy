@@ -37,7 +37,7 @@ export default class ElectionManager extends Module {
 
         this.votingHandler!.draftBallots = new Map(); // Reset this
 
-        const info = await ElectionInfo.findOne().exec();
+        const info = await ElectionInfo.findOne();
         if (!info) return this.logger.error("Failed to get election info.");
         if (info.processStartTime == undefined || info.currentPhase == undefined) return this.logger.error("Election info is missing details");
 
@@ -64,9 +64,9 @@ export default class ElectionManager extends Module {
         this.votingHandler = modules.get("ElectionVoting") as ElectionVoting;
         this.roleAuditor = modules.get("RoleAudit") as RoleAudit;
 
-        if (process.env.dev) {
+        if (process.env.DEV) {
             const electionInfo = new ElectionInfo({
-                processStartTime: Date.now() + 3000,
+                processStartTime: new Date(Date.now() + 3000),
                 currentPhase: 0
             })
 
@@ -235,7 +235,7 @@ export default class ElectionManager extends Module {
                 currentPhase: ElectionPhase.INACTIVE
             });
 
-            if (newElectionInfo.processStartTime!.getTime() < Date.now()) return rej("Election is scheduled for the past. This will not end well.")
+            //if (newElectionInfo.processStartTime!.getTime() < Date.now()) return rej("Election is scheduled for the past. This will not end well.")
 
             await currentInfo.deleteOne();
             await newElectionInfo.save();

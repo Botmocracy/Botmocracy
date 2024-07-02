@@ -46,15 +46,14 @@ export default class ElectionRegistration extends Module {
         const candidate = i.member;
         const runningMate = i.guild.members.cache.get(userIds[1]);
 
-        ElectionInfo.findOne((err: CallbackError, data: any) => {
-            if (err) return i.reply({ content: "Error retrieving election info: " + err.toString(), ephemeral: true });
+        ElectionInfo.findOne().then((data: any) => {
 
             if (data.currentPhase != 1) return i.update({
                 content: "Election registration is not currently open. Please refer to <#" + config.election_updates_channel + "> for more information.",
                 components: []
             })
 
-            ElectionCandidate.findOne({ discordId: candidate?.user.id }, (err: CallbackError, data: any) => {
+            ElectionCandidate.findOne({ discordId: candidate?.user.id }).then(data => {
                 if (data) return i.update({ content: "You have already entered this election.", components: [] });
 
                 const candidateInfo = new ElectionCandidate({
@@ -72,6 +71,8 @@ export default class ElectionRegistration extends Module {
             })
 
 
+        }).catch(err => {
+            i.reply({ content: "Error retrieving election info: " + err.toString(), ephemeral: true });
         })
     }
 
@@ -168,7 +169,7 @@ export default class ElectionRegistration extends Module {
                             return i.reply({ content: "That person is not a member of this server.", ephemeral: true });
                         if (!await checkCitizenship(runningMate.id))
                             return i.reply({ content: "That person is not a citizen.", ephemeral: true });
-                        if (runningMate.id == i.user.id)
+                        if (!process.env.DEV && runningMate.id == i.user.id)
                             return i.reply({ content: "Really? You want to run with yourself?", ephemeral: true });
                         if (runningMate.id == this.client?.user.id)
                             return i.reply({ content: "I don't want to run with you, I'm a bot!", ephemeral: true });
