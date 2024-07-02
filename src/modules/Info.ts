@@ -21,14 +21,12 @@ export default class Info extends Module {
 
     async getTownByName(name: string) {
         const result = await axios.get("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World", { maxRedirects: 1 });
-        let fullBody = '';
+        let towns: { [key: string]: any }[] = [];
 
         for await (const part of result.data) {
-            fullBody += part
+            towns.push(part)
         }
 
-
-        const towns: [{ [key: string]: any }] = JSON.parse(fullBody);
         for (const townData of towns) {
             if (townData['Town Name'] == name) {
                 return townData;
@@ -61,27 +59,22 @@ export default class Info extends Module {
                 get: {
                     executor: async (i: ChatInputCommandInteraction) => {
                         await i.deferReply({ ephemeral: true });
-                        Town.findOne({ name: i.options.getString("name") }, async (err: any, res: any) => {
-                            if (!res || err) {
-                                await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
-                                return;
-                            }
-                            const name = res['name'];
-                            const mayor = res['mayor'];
-                            const depMayor = res['depMayor'];
-                            const coords = res['coords'];
+                        let res = await Town.findOne({ name: i.options.getString("name") }).catch(() => null);
+                        if (!res) {
+                            await i.editReply(`Invalid town \`${i.options.getString("name")}\``);
+                            return
+                        }
 
-                            const embed = new EmbedBuilder()
-                                .setTitle(name)
-                                .addFields(
-                                    {name: "Mayor", "value": mayor},
-                                    {name: "Deputy Mayor", value: depMayor},
-                                    {name: "Coords", value: coords},
-                                )
-                                .setColor("Blurple");
+                        const embed = new EmbedBuilder()
+                            .setTitle(res.name)
+                            .addFields(
+                                {name: "Mayor", value: res.mayor},
+                                {name: "Deputy Mayor", value: res.depMayor || "_ _"},
+                                {name: "Coords", value: res.coords},
+                            )
+                            .setColor("Blurple");
 
-                            await i.editReply({ embeds: [embed] });
-                        })
+                        await i.editReply({ embeds: [embed] });
                     }
                 },
                 add: {
@@ -101,7 +94,7 @@ export default class Info extends Module {
                         const town = new Town({
                             name: townData['Town Name'],
                             mayor: townData['Mayor'],
-                            depMayor: townData['Deputy Mayor'],
+                            depMayor: townData['Deputy Mayor'] || "None",
                             coords: `${townData['X']} ${townData['Y']} ${townData['Z']}`,
                             rank: townData['Town Rank']
                         });

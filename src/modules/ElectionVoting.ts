@@ -25,7 +25,7 @@ export default class ElectionVoting extends Module {
                 }
                 else if (i.customId == "submitelectionvote") this.submitVote(i);
                 else if (i.customId == "confirmsubmitelectionvote") this.confirmSubmitVote(i);
-            } else if (i.isSelectMenu()) {
+            } else if (i.isStringSelectMenu()) {
                 if (i.customId.startsWith("electionpreference")) this.recordVotePreference(i);
             }
         });

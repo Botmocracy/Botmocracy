@@ -1,6 +1,13 @@
 import { model, Schema } from 'mongoose';
 
-const accountSchema = new Schema({
+interface Account {
+    discordId: string;
+    minecraftUUID: string;
+    roles?: string[];
+    citizen: boolean;
+}
+
+const accountSchema = new Schema<Account>({
     discordId: String,
     minecraftUUID: String,
     roles: { type: Array<String>, default: [] },
@@ -12,4 +19,4 @@ if (process.env.DEV) {
     name += "DEV";
 }
 
-export default model(name, accountSchema)
+export default model<Account>(name, accountSchema)

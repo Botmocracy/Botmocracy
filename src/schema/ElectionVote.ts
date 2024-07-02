@@ -1,6 +1,11 @@
 import { model, Schema } from "mongoose";
 
-const electionVoteSchema = new Schema({
+interface ElectionVote {
+    discordId: string;
+    preferences: string[];
+}
+
+const electionVoteSchema = new Schema<ElectionVote>({
     discordId: String,
     preferences: Array<string>
 });
@@ -10,4 +15,4 @@ if (process.env.DEV) {
     name += "DEV";
 }
 
-export default model(name, electionVoteSchema)
+export default model<ElectionVote>(name, electionVoteSchema)
