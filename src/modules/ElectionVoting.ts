@@ -19,6 +19,7 @@ export default class ElectionVoting extends Module {
         this.client?.on("interactionCreate", async (i) => {
             if (i.guildId != config.guild) return;
             if (i.isButton()) {
+                this.logger.warn(i.customId) // TODO remove
                 if (i.customId == "electionvote") this.startVote(i);
                 else if (i.customId.startsWith("electionvotingpage")) {
                     i.update(await this.getVotingPage(parseInt(i.customId.split("-")[1]), i.user))
@@ -26,6 +27,7 @@ export default class ElectionVoting extends Module {
                 else if (i.customId == "submitelectionvote") this.submitVote(i);
                 else if (i.customId == "confirmsubmitelectionvote") this.confirmSubmitVote(i);
             } else if (i.isStringSelectMenu()) {
+                this.logger.warn(i.customId) // TODO remove
                 if (i.customId.startsWith("electionpreference")) this.recordVotePreference(i);
             }
         });
