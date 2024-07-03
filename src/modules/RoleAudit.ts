@@ -25,7 +25,7 @@ export default class RoleAudit extends Module {
 
     // Check for special roles being deleted
 
-    this.client?.on("roleDelete", async (role) => {
+    this.client!.on("roleDelete", async (role) => {
       await wait(1000);
 
       const auditLogs = await role.guild.fetchAuditLogs({
@@ -46,14 +46,14 @@ export default class RoleAudit extends Module {
       if (!member) return;
 
       member.timeout(12 * 60 * 60 * 1000, "Deleted protected role");
-      (this.client?.channels.cache.get(
+      (this.client!.channels.cache.get(
         config.logs_channel,
       ) as TextChannel)!.send("@everyone a protected role was deleted.");
     });
   }
 
   async auditRoles(): Promise<void> {
-    const guild = this.client?.guilds.cache.get(config.guild);
+    const guild = this.client!.guilds.cache.get(config.guild);
 
     // Audit role permissions
     const rolesCache: Collection<string, Role> = guild!.roles.cache!;

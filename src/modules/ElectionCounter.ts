@@ -37,7 +37,7 @@ export default class ElectionCounter extends Module {
 
     const votesRaw = await ElectionVote.find().exec();
     for (const vote of votesRaw) {
-      const ballot = (vote.preferences! as unknown as string[]).filter((p) =>
+      const ballot = (vote.preferences).filter((p) =>
         this.candidates.includes(p),
       );
       if (ballot.length == 0) return;

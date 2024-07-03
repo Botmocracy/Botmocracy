@@ -1,7 +1,7 @@
-import Module from "./abstract/Module";
 import capcon from "capture-console";
-import { config } from "..";
 import { TextChannel } from "discord.js";
+import { config } from "..";
+import Module from "./abstract/Module";
 
 export default class DiscordLogger extends Module {
   name = "DiscordLogger";
@@ -42,7 +42,7 @@ export default class DiscordLogger extends Module {
   }
 
   sendMessage(message: string) {
-    (this.client?.channels.cache.get(config.logs_channel) as TextChannel)!.send(
+    (this.client!.channels.cache.get(config.logs_channel) as TextChannel)!.send(
       message,
     );
   }
