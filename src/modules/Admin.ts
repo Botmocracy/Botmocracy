@@ -69,7 +69,7 @@ export default class Admin extends Module {
         if (!config.admins.includes(i.user.id))
           return i.reply({ content: "You cannot use this.", ephemeral: true });
 
-        exec("git pull", (err, stdout, stderr) => {
+        exec("git pull", (err) => {
           if (err != null) {
             i.reply({
               content: `Something went wrong when doing git pull: ${err.message}`,
@@ -77,7 +77,7 @@ export default class Admin extends Module {
             });
           }
         });
-        exec("npm install", (err, stdout, stderr) => {
+        exec("npm install", (err) => {
           if (err != null) {
             i.reply({
               content: `Something went wrong when doing npm install: ${err.message}`,

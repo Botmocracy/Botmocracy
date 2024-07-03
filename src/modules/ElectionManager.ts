@@ -31,7 +31,7 @@ export default class ElectionManager extends Module {
   votingHandler: ElectionVoting | undefined;
   roleAuditor: RoleAudit | undefined;
 
-  timeouts: Array<lt.Timeout> = [];
+  timeouts: lt.Timeout[] = [];
 
   async onEnable() {
     this.logger.info("Enabled");
@@ -53,7 +53,7 @@ export default class ElectionManager extends Module {
     const currentPhase: number = info.currentPhase;
     this.registrationBegin = info.processStartTime.getTime();
     this.votingBegin =
-      this.registrationBegin!! +
+      this.registrationBegin! +
       timestring(config.election_registration_period, "ms");
     this.votingEnd =
       this.votingBegin + timestring(config.election_vote_period, "ms");
@@ -65,9 +65,10 @@ export default class ElectionManager extends Module {
         this.timeouts.push(
           lt.setTimeout(
             () => this.beginRegistration(),
-            this.registrationBegin!! - Date.now(),
+            this.registrationBegin! - Date.now(),
           ),
         );
+      // eslint-disable-next-line no-fallthrough
       case 1:
         this.timeouts.push(
           lt.setTimeout(
@@ -75,10 +76,12 @@ export default class ElectionManager extends Module {
             this.votingBegin - Date.now(),
           ),
         );
+        // eslint-disable-next-line no-fallthrough
       case 2:
         this.timeouts.push(
           lt.setTimeout(() => this.endVoting(), this.votingEnd - Date.now()),
         );
+        // eslint-disable-next-line no-fallthrough
       case 3:
         this.timeouts.push(
           lt.setTimeout(
@@ -212,11 +215,11 @@ export default class ElectionManager extends Module {
 
     const guild = this.client?.guilds.cache.get(config.guild);
 
-    const presidentRole = await guild?.roles.fetch(config.president_role)!;
-    const vicePresidentRole = await guild?.roles.fetch(
+    const presidentRole = await guild!.roles.fetch(config.president_role)!;
+    const vicePresidentRole = await guild!.roles.fetch(
       config.vice_president_role,
     )!;
-    const governmentRole = await guild?.roles.fetch(config.government_role)!;
+    const governmentRole = await guild!.roles.fetch(config.government_role)!;
 
     const electedRoleIds = [
       presidentRole!.id,
@@ -227,7 +230,7 @@ export default class ElectionManager extends Module {
     await guild?.members.fetch(); // Do the cache things
 
     for (const account of await Account.find()) {
-      const newRoles = (account.roles as unknown as Array<string>).filter(
+      const newRoles = (account.roles as unknown as string[]).filter(
         (role) => !electedRoleIds.includes(role),
       );
 
@@ -243,7 +246,7 @@ export default class ElectionManager extends Module {
         );
     }
 
-    for (const member of guild?.members.cache.values()!) {
+    for (const member of guild!.members.cache.values()!) {
       if (member.roles.cache.hasAny(...electedRoleIds) && !member.user.bot)
         await member.roles.remove(electedRoleIds, "Transfer of power");
     }
@@ -275,7 +278,7 @@ export default class ElectionManager extends Module {
     this.scheduleNextElection()
       .then((nextElectionTime) => {
         (
-          this.client?.channels.cache.get(
+          this.client!.channels.cache.get(
             config.announcement_channel,
           )! as TextChannel
         ).send(
@@ -297,32 +300,30 @@ export default class ElectionManager extends Module {
   }
 
   async scheduleNextElection(): Promise<number> {
-    return new Promise(async (res, rej) => {
-      const currentInfo = await ElectionInfo.findOne().exec();
+    const currentInfo = await ElectionInfo.findOne().exec();
 
-      if (currentInfo == null) return rej("Failed to fetch election info");
+    if (currentInfo == null) throw new Error("Failed to fetch election info");
 
-      const nextElectionTime =
-        currentInfo.processStartTime!.getTime() +
-        timestring(config.time_between_elections, "ms");
+    const nextElectionTime =
+      currentInfo.processStartTime!.getTime() +
+      timestring(config.time_between_elections, "ms");
 
-      const newElectionInfo = new ElectionInfo({
-        processStartTime: new Date(nextElectionTime),
-        currentPhase: ElectionPhase.INACTIVE,
-      });
-
-      //if (newElectionInfo.processStartTime!.getTime() < Date.now()) return rej("Election is scheduled for the past. This will not end well.")
-
-      await currentInfo.deleteOne();
-      await newElectionInfo.save();
-
-      this.run();
-
-      ElectionCandidate.deleteMany().exec();
-      ElectionVote.deleteMany().exec();
-
-      res(nextElectionTime);
+    const newElectionInfo = new ElectionInfo({
+      processStartTime: new Date(nextElectionTime),
+      currentPhase: ElectionPhase.INACTIVE,
     });
+
+    //if (newElectionInfo.processStartTime!.getTime() < Date.now()) return rej("Election is scheduled for the past. This will not end well.")
+
+    await currentInfo.deleteOne();
+    await newElectionInfo.save();
+
+    this.run();
+
+    ElectionCandidate.deleteMany().exec();
+    ElectionVote.deleteMany().exec();
+
+    return (nextElectionTime);
   }
 
   async noElectionCandidatesOrVotes() {

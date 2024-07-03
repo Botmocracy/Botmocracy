@@ -9,14 +9,14 @@ import {
 import wait from "../util/wait";
 import Module from "./abstract/Module";
 import ElectionManager from "./ElectionManager";
-import timestring = require("timestring");
+import timestring from "timestring";
 
 export default class ElectionCounter extends Module {
   name = "ElectionCounter";
 
   candidates!: string[];
-  votes: { [key: string]: Array<Array<string>> } = {};
-  countNumber: number = 0;
+  votes: Record<string, string[][]> = {};
+  countNumber = 0;
 
   manager!: ElectionManager;
 
@@ -37,7 +37,7 @@ export default class ElectionCounter extends Module {
 
     const votesRaw = await ElectionVote.find().exec();
     for (const vote of votesRaw) {
-      let ballot = (vote.preferences! as unknown as string[]).filter((p) =>
+      const ballot = (vote.preferences! as unknown as string[]).filter((p) =>
         this.candidates.includes(p),
       );
       if (ballot.length == 0) return;
@@ -54,7 +54,7 @@ export default class ElectionCounter extends Module {
     this.doCount();
   }
 
-  async doCount(changes?: { [key: string]: number }, countName?: string) {
+  async doCount(changes?: Record<string, number>, countName?: string) {
     await wait(timestring(config.time_between_counts, "ms"));
 
     // Calculate quota
@@ -66,7 +66,7 @@ export default class ElectionCounter extends Module {
 
     this.countNumber++;
 
-    let outputMessageBuilder = [];
+    const outputMessageBuilder = [];
     outputMessageBuilder.push(
       `**Count ${this.countNumber}: ${countName ? countName : "Initial Count"}**`,
     );
@@ -92,11 +92,11 @@ export default class ElectionCounter extends Module {
       this.manager.elect(winner);
     } else {
       // Now we need to figure out who to eliminate. Put everyone into an array where their location is based on number of votes and work it out that way.
-      let candidatesSortedByNumberOfVotes: Array<Array<string>> = Array(
+      const candidatesSortedByNumberOfVotes: string[][] = Array(
         numberOfVotes,
       )
         .fill(null)
-        .map((v) => {
+        .map(() => {
           return [];
         }); // Fucking fill using references instead of objects
 
@@ -104,10 +104,10 @@ export default class ElectionCounter extends Module {
         candidatesSortedByNumberOfVotes[this.votes[c].length].push(c);
       }
 
-      let eliminating: string[] = [];
-      let totalEliminatedVotes: number = 0;
+      const eliminating: string[] = [];
+      let totalEliminatedVotes = 0;
 
-      for (let i in candidatesSortedByNumberOfVotes) {
+      for (const i in candidatesSortedByNumberOfVotes) {
         const nextNumberOfVotes = getNextNonEmptyIndex(
           candidatesSortedByNumberOfVotes,
           i,
@@ -125,13 +125,13 @@ export default class ElectionCounter extends Module {
             candidatesSortedByNumberOfVotes[i].length * parseInt(i);
         } else if (eliminating.length == 0) {
           // There isn't a next highest person || we can't eliminate everyone here (or both really) && we have to eliminate someone
-          let candidatesReadable = formatArrayValuesAsHumanReadableString(
+          const candidatesReadable = formatArrayValuesAsHumanReadableString(
             candidatesSortedByNumberOfVotes[i].map((c) => "<@" + c + ">"),
           );
           outputMessageBuilder.push(
             `${candidatesReadable} are tied. One will be eliminated by random selection.`,
           );
-          let toEliminate =
+          const toEliminate =
             candidatesSortedByNumberOfVotes[i][
               Math.floor(
                 Math.random() * candidatesSortedByNumberOfVotes[i].length -
@@ -164,8 +164,8 @@ export default class ElectionCounter extends Module {
     });
   }
 
-  distributeVotes(candidates: string[]): { [key: string]: number } {
-    const resultObject: { [key: string]: number } = {};
+  distributeVotes(candidates: string[]): Record<string, number> {
+    const resultObject: Record<string, number> = {};
 
     for (const candidate of Object.keys(this.votes))
       resultObject[candidate] = 0; // We need to do it here so that will definitely all be ready in the next loop

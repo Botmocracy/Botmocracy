@@ -1,8 +1,6 @@
 import {
-  CacheType,
   ChatInputCommandInteraction,
   Client,
-  CommandInteraction,
   GuildMemberRoleManager,
 } from "discord.js";
 import { CommandOptions, SubcommandOptions } from "../../util/CommandOptions";
@@ -75,8 +73,8 @@ export default class Module {
         } else await this.handleCommand(command, i);
       } catch (e: any) {
         this.logger.error(e.stack);
-        const errorMessage = `An error occurred. \`\`\`\ ${e.toString()} \`\`\``;
-        i.reply({ content: errorMessage, ephemeral: true }).catch((err) =>
+        const errorMessage = `An error occurred. \`\`\` ${e.toString()} \`\`\``;
+        i.reply({ content: errorMessage, ephemeral: true }).catch(() =>
           i.editReply({ content: errorMessage }),
         );
       }
@@ -86,7 +84,8 @@ export default class Module {
 
   onEnable(): void {}
 
-  onModulesLoaded(modules: Map<string, Module>): void {} // Runs when all modules are loaded
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onModulesLoaded(_modules: Map<string, Module>): void {} // Runs when all modules are loaded
 
-  slashCommands: { [key: string]: CommandOptions | SubcommandOptions } = {};
+  slashCommands: Record<string, CommandOptions | SubcommandOptions> = {};
 }

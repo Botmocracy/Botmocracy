@@ -18,7 +18,7 @@ import Auth from "./Auth";
 
 export default class ElectionVoting extends Module {
   name = "ElectionVoting";
-  draftBallots: Map<string, (string | null)[]> = new Map();
+  draftBallots = new Map<string, (string | null)[]>();
 
   authModule!: Auth;
 
@@ -87,105 +87,103 @@ export default class ElectionVoting extends Module {
   }
 
   async getVotingPage(page: number, user: User): Promise<any> {
-    return new Promise(async (res) => {
-      // See if they've submitted a vote before and if so fill in the values
-      if (page == 0 && !this.draftBallots.get(user.id)) {
-        let previousVote = await ElectionVote.findOne({
-          discordId: user.id,
-        }).exec();
-        if (previousVote) {
-          this.draftBallots.set(
-            user.id,
-            previousVote.preferences! as unknown as Array<string>,
-          );
-        }
+    // See if they've submitted a vote before and if so fill in the values
+    if (page == 0 && !this.draftBallots.get(user.id)) {
+      const previousVote = await ElectionVote.findOne({
+        discordId: user.id,
+      }).exec();
+      if (previousVote) {
+        this.draftBallots.set(
+          user.id,
+          previousVote.preferences! as unknown as string[],
+        );
       }
+    }
 
-      const electionPhase = await ElectionInfo.findOne().exec();
-      if (electionPhase?.currentPhase != 2)
-        res({ content: "Voting is not currently open.", components: [] });
+    const electionPhase = await ElectionInfo.findOne().exec();
+    if (electionPhase?.currentPhase != 2)
+      return ({ content: "Voting is not currently open.", components: [] });
 
-      const candidates = await ElectionCandidate.find().exec();
-      const candidatesFormattedAsMenuOptions: Array<SelectMenuComponentOptionData> =
-        [];
-      for (const candidate of candidates) {
-        candidatesFormattedAsMenuOptions.push({
-          label: `${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!)} (Pres), ${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!)} (VP)`,
-          value: candidate.discordId!,
-        });
-      }
-
+    const candidates = await ElectionCandidate.find().exec();
+    const candidatesFormattedAsMenuOptions: SelectMenuComponentOptionData[] =
+      [];
+    for (const candidate of candidates) {
       candidatesFormattedAsMenuOptions.push({
-        label: "No preference",
-        value: "no_preference",
+        label: `${await this.authModule.getMinecraftOrDiscordName(candidate.discordId!)} (Pres), ${await this.authModule.getMinecraftOrDiscordName(candidate.runningMateDiscordId!)} (VP)`,
+        value: candidate.discordId!,
       });
+    }
 
-      const votingMessageComponents = [];
+    candidatesFormattedAsMenuOptions.push({
+      label: "No preference",
+      value: "no_preference",
+    });
 
-      const pageStartPreference = page * 4;
-      let pageEndPreference = pageStartPreference + 3;
+    const votingMessageComponents = [];
 
-      if (candidates.length <= pageEndPreference)
-        pageEndPreference = candidates.length - 1;
+    const pageStartPreference = page * 4;
+    let pageEndPreference = pageStartPreference + 3;
 
-      let userDraftBallot: (string | null)[] = [];
-      if (this.draftBallots.get(user.id))
-        userDraftBallot = this.draftBallots.get(user.id)!;
+    if (candidates.length <= pageEndPreference)
+      pageEndPreference = candidates.length - 1;
 
-      for (let j = pageStartPreference; j <= pageEndPreference; j++) {
-        votingMessageComponents.push(
-          new ActionRowBuilder().addComponents(
-            new StringSelectMenuBuilder()
-              .setCustomId("electionpreference-" + j)
-              .setPlaceholder(
-                "Preference " +
-                  (j + 1) +
-                  (userDraftBallot && userDraftBallot[j]
-                    ? ": " +
-                      candidatesFormattedAsMenuOptions.filter(
-                        (c) => c.value == userDraftBallot[j],
-                      )[0].label
-                    : ""),
-              )
-              .addOptions(candidatesFormattedAsMenuOptions),
-          ),
-        );
-      }
+    let userDraftBallot: (string | null)[] = [];
+    if (this.draftBallots.get(user.id))
+      userDraftBallot = this.draftBallots.get(user.id)!;
 
-      const buttonRowComponents = [];
-
-      if (page > 0)
-        buttonRowComponents.push(
-          new ButtonBuilder()
-            .setCustomId(`electionvotingpage-${page - 1}`)
-            .setLabel("Previous Page")
-            .setStyle(ButtonStyle.Primary),
-        );
-      if (pageEndPreference != candidates.length - 1)
-        buttonRowComponents.push(
-          new ButtonBuilder()
-            .setCustomId(`electionvotingpage-${page + 1}`)
-            .setLabel("Next Page")
-            .setStyle(ButtonStyle.Primary),
-        );
-      else
-        buttonRowComponents.push(
-          new ButtonBuilder()
-            .setCustomId(`submitelectionvote`)
-            .setLabel("Submit Vote")
-            .setStyle(ButtonStyle.Success),
-        );
-
-      const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        buttonRowComponents,
+    for (let j = pageStartPreference; j <= pageEndPreference; j++) {
+      votingMessageComponents.push(
+        new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId("electionpreference-" + j)
+            .setPlaceholder(
+              "Preference " +
+                (j + 1) +
+                (userDraftBallot && userDraftBallot[j]
+                  ? ": " +
+                    candidatesFormattedAsMenuOptions.filter(
+                      (c) => c.value == userDraftBallot[j],
+                    )[0].label
+                  : ""),
+            )
+            .addOptions(candidatesFormattedAsMenuOptions),
+        ),
       );
-      votingMessageComponents.push(buttonRow);
+    }
 
-      res({
-        content: `**Election ballot page ${page + 1}/${Math.ceil(candidates.length / 4)}**`,
-        components: votingMessageComponents,
-        ephemeral: true,
-      });
+    const buttonRowComponents = [];
+
+    if (page > 0)
+      buttonRowComponents.push(
+        new ButtonBuilder()
+          .setCustomId(`electionvotingpage-${page - 1}`)
+          .setLabel("Previous Page")
+          .setStyle(ButtonStyle.Primary),
+      );
+    if (pageEndPreference != candidates.length - 1)
+      buttonRowComponents.push(
+        new ButtonBuilder()
+          .setCustomId(`electionvotingpage-${page + 1}`)
+          .setLabel("Next Page")
+          .setStyle(ButtonStyle.Primary),
+      );
+    else
+      buttonRowComponents.push(
+        new ButtonBuilder()
+          .setCustomId(`submitelectionvote`)
+          .setLabel("Submit Vote")
+          .setStyle(ButtonStyle.Success),
+      );
+
+    const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      buttonRowComponents,
+    );
+    votingMessageComponents.push(buttonRow);
+
+    return ({
+      content: `**Election ballot page ${page + 1}/${Math.ceil(candidates.length / 4)}**`,
+      components: votingMessageComponents,
+      ephemeral: true,
     });
   }
 
@@ -235,8 +233,8 @@ export default class ElectionVoting extends Module {
         ephemeral: true,
       });
 
-    for (let i in draftBallot) {
-      let iAsNumber = parseInt(i); // It's already a number but just so ts will stfu
+    for (const i in draftBallot) {
+      const iAsNumber = parseInt(i); // It's already a number but just so ts will stfu
       outputMessage += `\nPreference ${iAsNumber + 1}: **${await this.authModule.getMinecraftOrDiscordName(draftBallot[iAsNumber]!, true)}**`;
     }
 

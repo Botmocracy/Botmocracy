@@ -28,7 +28,7 @@ export default class Info extends Module {
       "https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World",
       { maxRedirects: 1 },
     );
-    let towns: { [key: string]: any }[] = [];
+    const towns: Record<string, any>[] = [];
 
     for await (const part of result.data) {
       towns.push(part);
@@ -75,7 +75,7 @@ export default class Info extends Module {
         get: {
           executor: async (i: ChatInputCommandInteraction) => {
             await i.deferReply({ ephemeral: true });
-            let res = await Town.findOne({
+            const res = await Town.findOne({
               name: i.options.getString("name"),
             }).catch(() => null);
             if (!res) {
@@ -112,7 +112,7 @@ export default class Info extends Module {
 
             const townName = i.options.getString("name", true);
 
-            let townData: { [key: string]: string } | undefined =
+            const townData: Record<string, string> | undefined =
               await this.getTownByName(townName);
             if (!townData)
               return i.editReply({ content: "This town does not exist." });
@@ -137,7 +137,7 @@ export default class Info extends Module {
               "https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members",
             );
             const executorMemberData = memberData.filter(
-              (v: { [key: string]: string }) =>
+              (v: Record<string, string>) =>
                 v["Username"] == minecraftName ||
                 v["Temporary Usernames"].split(", ").includes(minecraftName) ||
                 v["Former Usernames"].split(", ").includes(minecraftName),

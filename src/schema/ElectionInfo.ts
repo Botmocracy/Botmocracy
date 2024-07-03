@@ -10,7 +10,7 @@ interface ElectionInfo {
 const electionInfoSchema = new Schema<ElectionInfo>({
   processStartTime: Date,
   currentPhase: { type: Number, enum: ElectionPhase },
-  winners: Array<String>,
+  winners: [String],
 });
 
 let name = "ElectionInfo";

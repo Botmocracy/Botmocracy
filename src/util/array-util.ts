@@ -1,16 +1,16 @@
 export function formatArrayValuesAsHumanReadableString(
-  array: Array<unknown>,
+  array: unknown[],
 ): string {
-  let result = array;
+  const result = array;
   if (result.length > 1) result.splice(array.length - 1, 0, "and");
   return result.join(", ").replace(", and,", " and");
 }
 
 export function getNextNonEmptyIndex(
-  array: Array<unknown | null>,
+  array: (unknown | null)[],
   startPoint: string,
 ): number | null {
-  for (let i in array) {
+  for (const i in array) {
     if (
       parseInt(i) > parseInt(startPoint) &&
       array[i] != null &&
