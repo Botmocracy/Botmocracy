@@ -36,6 +36,15 @@ const client = new Client({
 const logger = new Logger("Index");
 const modules = new Map<string, Module>();
 
+process
+  .on('unhandledRejection', (reason: Error | any, p) => {
+    logger.error(`Unhandled Rejection at Promise ${p}: ${reason?.stack || reason}`);
+  })
+  .on('uncaughtException', err => {
+    logger.error(`Uncaught Exception: ${err.stack || err}`);
+    process.exit(1);
+  });
+
 client.on("ready", async (client) => {
   // Do module things
   logger.info("Enabling modules");
