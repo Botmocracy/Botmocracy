@@ -68,9 +68,9 @@ export default class Info extends Module {
                         const embed = new EmbedBuilder()
                             .setTitle(res.name)
                             .addFields(
-                                {name: "Mayor", value: res.mayor},
+                                {name: "Mayor", value: res.mayor || "_ _"},
                                 {name: "Deputy Mayor", value: res.depMayor || "_ _"},
-                                {name: "Coords", value: res.coords},
+                                {name: "Coords", value: res.coords || "_ _"},
                             )
                             .setColor("Blurple");
 

@@ -11,9 +11,9 @@ interface Town {
 const townSchema = new Schema<Town>({
     name: String,
     mayor: String,
-    depMayor: { type: String, required: false, default: () => "None" },
+    depMayor: { type: String, required: false, default: "None" },
     coords: String,
-    rank: { type: String, required: false, default: () => "Unranked" },
+    rank: { type: String, required: false, default: "Unranked" },
 })
 
 let name = "Town";
