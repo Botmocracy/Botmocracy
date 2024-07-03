@@ -1,5 +1,4 @@
 import {
-  ChannelResolvable,
   MessageMentionTypes,
   PermissionsString,
   RoleResolvable,

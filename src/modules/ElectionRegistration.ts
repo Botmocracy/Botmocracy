@@ -8,7 +8,6 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
-import { CallbackError } from "mongoose";
 import timestring from "timestring";
 import { config } from "..";
 import ElectionCandidate from "../schema/ElectionCandidate";
@@ -47,7 +46,7 @@ export default class ElectionRegistration extends Module {
   }
 
   confirmCandidacy(i: ButtonInteraction) {
-    let userIds = i.customId.split("-");
+    const userIds = i.customId.split("-");
     userIds.shift(); // Remove "confirmcandidacy"
 
     // Make sure there's no sorcery going on
@@ -108,7 +107,7 @@ export default class ElectionRegistration extends Module {
   }
 
   async confirmWithdrawal(i: ButtonInteraction) {
-    let userIds = i.customId.split("-");
+    const userIds = i.customId.split("-");
     userIds.shift(); // Remove "confirmwithdrawal"
 
     // Make sure there's no sorcery going on
@@ -166,11 +165,11 @@ export default class ElectionRegistration extends Module {
         components: [],
       });
 
-    let newElectionTime = new Date(Date.now() + timestring("1h", "ms"));
+    const newElectionTime = new Date(Date.now() + timestring("1h", "ms"));
     newElectionTime.setMinutes(0);
     newElectionTime.setSeconds(0);
     newElectionTime.setMilliseconds(0);
-    let newInfo = new ElectionInfo({
+    const newInfo = new ElectionInfo({
       currentPhase: electionInfo.currentPhase,
       processStartTime: newElectionTime,
     });
@@ -322,7 +321,7 @@ export default class ElectionRegistration extends Module {
             );
 
             i.reply({
-              content: `**Are you sure?**\n\If you click the \`Confirm\` button, this combination will be removed from the election`,
+              content: `**Are you sure?**\nIf you click the \`Confirm\` button, this combination will be removed from the election`,
               components: [row],
               ephemeral: true,
             });

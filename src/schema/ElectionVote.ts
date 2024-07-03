@@ -7,7 +7,7 @@ interface ElectionVote {
 
 const electionVoteSchema = new Schema<ElectionVote>({
   discordId: String,
-  preferences: Array<string>,
+  preferences: [String],
 });
 
 let name = "ElectionVote";

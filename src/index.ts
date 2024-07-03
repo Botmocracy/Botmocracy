@@ -6,7 +6,6 @@ if (fs.existsSync(".env")) {
 }
 
 import {
-  ActivityType,
   Client,
   GatewayIntentBits,
   REST,
@@ -43,11 +42,11 @@ client.on("ready", async (client) => {
   const moduleFiles = readdirSync("src/modules");
 
   const rest = new REST().setToken(process.env.TOKEN!);
-  let slashCommands = [];
+  const slashCommands = [];
 
   for (const f of moduleFiles) {
     if (!f.endsWith(".ts")) continue; // Ignore non-ts files
-    const M = require(`./modules/${f}`);
+    const M = await import(`./modules/${f}`);
     const module = new M.default();
     if (!(module instanceof Module))
       throw new Error(`Module ${f} does not extend "Module"`);

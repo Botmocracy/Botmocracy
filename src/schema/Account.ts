@@ -3,14 +3,14 @@ import { model, Schema } from "mongoose";
 interface Account {
   discordId: string;
   minecraftUUID: string;
-  roles?: string[];
+  roles: string[];
   citizen: boolean;
 }
 
 const accountSchema = new Schema<Account>({
   discordId: String,
   minecraftUUID: String,
-  roles: { type: Array<String>, default: [] },
+  roles: { type: [String], default: [] },
   citizen: { type: Boolean, default: false },
 });
 

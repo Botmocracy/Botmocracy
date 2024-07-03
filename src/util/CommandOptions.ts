@@ -21,5 +21,5 @@ export interface SubcommandOptions {
     | SlashCommandSubcommandsOnlyBuilder
     | SlashCommandOptionsOnlyBuilder;
   executor?: (i: ChatInputCommandInteraction) => Promise<unknown>;
-  subcommands: { [key: string]: Omit<CommandOptions, "cmdBuilder"> };
+  subcommands: Record<string, Omit<CommandOptions, "cmdBuilder">>;
 }

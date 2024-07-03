@@ -14,7 +14,7 @@ import Module from "./abstract/Module";
 export default class Auth extends Module {
   name = "Auth";
 
-  nameCache: Map<string, string> = new Map();
+  nameCache = new Map<string, string>();
 
   onEnable(): void {
     this.logger.info("Enabled");
@@ -32,7 +32,7 @@ export default class Auth extends Module {
       const MojangRes = await axios.get(
         `https://api.allorigins.win/raw?url=https://sessionserver.mojang.com/session/minecraft/profile/${account.minecraftUUID}`,
       );
-      this.logger.warn("4", new Date().toISOString());
+      
       if (MojangRes.data.name) {
         this.nameCache.set(id, MojangRes.data.name);
         return MojangRes.data.name;
@@ -64,7 +64,7 @@ export default class Auth extends Module {
     const { data } = await axios.get(
       "https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members",
     );
-    let res: string[] = [];
+    const res: string[] = [];
     data.forEach((player: any) => {
       res.push(player["Username"]);
       res.push(
@@ -98,9 +98,9 @@ export default class Auth extends Module {
     const account = await Account.findOne({ discordId: member.id });
     if (!account) return;
 
-    const roles = account.roles as unknown as Array<string>;
+    const roles = account.roles as unknown as string[];
     await member.guild.roles.fetch();
-    let rolesToAdd: RoleResolvable[] = [];
+    const rolesToAdd: RoleResolvable[] = [];
     roles.forEach((value) => {
       const role = member.guild.roles.cache.get(value);
       if (role) rolesToAdd.push(role);
@@ -135,7 +135,7 @@ export default class Auth extends Module {
           req = await axios.get(
             `https://minecraftauth.me/api/lookup?discord=${i.user.id}`,
           );
-        } catch (error) {
+        } catch {
           i.editReply({
             content: "You need to verify with https://minecraftauth.me first.",
           });
@@ -168,9 +168,9 @@ export default class Auth extends Module {
 
           i.editReply({ content: "Verified!" });
           (
-            this.client?.channels.cache.get(
+            this.client!.channels.cache.get(
               config.welcome_channel,
-            )! as TextChannel
+            ) as TextChannel
           ).send(
             `${i.user} welcome! Check out <#995567687080091769> for information on becoming a citizen.`,
           );
