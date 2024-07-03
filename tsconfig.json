@@ -1,10 +1,10 @@
 {
-    "compilerOptions": {
-      "module": "commonjs",
-      "strict": true,
-      "moduleResolution": "node",
-      "resolveJsonModule": true,
-      "esModuleInterop": true,
-      "target": "ES2015"
-    }
+  "compilerOptions": {
+    "module": "commonjs",
+    "strict": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "target": "ES2015"
   }
+}
