@@ -77,7 +77,7 @@ export default class Info extends Module {
             await i.deferReply({ ephemeral: true });
             const res = await Town.findOne({
               name: i.options.getString("name"),
-            }).catch(() => null);
+            });
             if (!res) {
               i.editReply(
                 `Invalid town \`${i.options.getString("name")}\``,
@@ -168,11 +168,11 @@ export default class Info extends Module {
             await town.save();
 
             i.editReply({ content: "Successfully added town!" });
-            const member = await this.client?.guilds.cache
+            const member = await this.client!.guilds.cache
               .get(config.guild)
               ?.members.fetch(i.user);
             await member!.roles.add(config.citizen_role);
-            const notificationChannel = this.client?.channels.cache.get(
+            const notificationChannel = this.client!.channels.cache.get(
               config.town_notifications_channel,
             ) as TextChannel;
             notificationChannel.send(

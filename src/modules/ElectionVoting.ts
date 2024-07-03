@@ -3,6 +3,7 @@ import {
   ButtonBuilder,
   ButtonInteraction,
   ButtonStyle,
+  InteractionReplyOptions,
   SelectMenuComponentOptionData,
   SelectMenuInteraction,
   StringSelectMenuBuilder,
@@ -25,7 +26,7 @@ export default class ElectionVoting extends Module {
   async onEnable() {
     this.logger.info("Enabled");
 
-    this.client?.on("interactionCreate", async (i) => {
+    this.client!.on("interactionCreate", async (i) => {
       if (i.guildId != config.guild) return;
       if (i.isButton()) {
         if (i.customId == "electionvote") this.startVote(i);
@@ -84,7 +85,7 @@ export default class ElectionVoting extends Module {
     });
   }
 
-  async getVotingPage(page: number, user: User): Promise<any> {
+  async getVotingPage(page: number, user: User): Promise<InteractionReplyOptions> {
     // See if they've submitted a vote before and if so fill in the values
     if (page == 0 && !this.draftBallots.get(user.id)) {
       const previousVote = await ElectionVote.findOne({
@@ -93,7 +94,7 @@ export default class ElectionVoting extends Module {
       if (previousVote) {
         this.draftBallots.set(
           user.id,
-          previousVote.preferences! as unknown as string[],
+          previousVote.preferences,
         );
       }
     }
@@ -131,7 +132,7 @@ export default class ElectionVoting extends Module {
 
     for (let j = pageStartPreference; j <= pageEndPreference; j++) {
       votingMessageComponents.push(
-        new ActionRowBuilder().addComponents(
+        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
           new StringSelectMenuBuilder()
             .setCustomId("electionpreference-" + j)
             .setPlaceholder(

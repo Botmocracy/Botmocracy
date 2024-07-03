@@ -17,7 +17,7 @@ export default class Admin extends Module {
 
   onEnable(): void {
     this.logger.info("Enabled");
-    this.client?.on("interactionCreate", (i) => {
+    this.client!.on("interactionCreate", (i) => {
       if (!i.isModalSubmit()) return;
       this.onModalSubmit(i);
     });
@@ -27,7 +27,7 @@ export default class Admin extends Module {
     if (!i.customId.startsWith("message")) return;
     const idSplit = i.customId.split("-");
     const channelId = idSplit[1];
-    const channel = this.client?.channels.cache.get(channelId);
+    const channel = this.client!.channels.cache.get(channelId);
     if (!channel?.isTextBased())
       return i.reply({ content: "Imagine", ephemeral: true });
     channel.send(i.fields.getTextInputValue("text"));

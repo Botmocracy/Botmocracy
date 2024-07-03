@@ -18,7 +18,7 @@ export default class Auth extends Module {
 
   onEnable(): void {
     this.logger.info("Enabled");
-    this.client?.on("guildMemberAdd", (member) => this.onMemberJoin(member));
+    this.client!.on("guildMemberAdd", (member) => this.onMemberJoin(member));
   }
 
   async getMinecraftNameFromDiscordId(id: string) {
@@ -54,7 +54,7 @@ export default class Auth extends Module {
         ? minecraftUsername.replace("_", "\\_")
         : minecraftUsername;
     else {
-      const discordUser = await this.client?.users.fetch(discordUserId);
+      const discordUser = await this.client!.users.fetch(discordUserId);
       if (!discordUser) return "<unknown>";
       else return discordUser.username;
     }
@@ -98,7 +98,7 @@ export default class Auth extends Module {
     const account = await Account.findOne({ discordId: member.id }).exec();
     if (!account) return;
 
-    const roles = account.roles as unknown as string[];
+    const roles = account.roles;
     await member.guild.roles.fetch();
     const rolesToAdd: RoleResolvable[] = [];
     roles.forEach((value) => {

@@ -26,7 +26,7 @@ export default class ElectionRegistration extends Module {
   onEnable(): void {
     this.logger.info("Enabled");
 
-    this.client?.on("interactionCreate", (i) => {
+    this.client!.on("interactionCreate", (i) => {
       if (i.guildId != config.guild) return;
 
       if (i.isButton()) {
@@ -60,14 +60,14 @@ export default class ElectionRegistration extends Module {
     const candidate = i.member;
     const runningMate = i.guild.members.cache.get(userIds[1]);
 
-    const electionInfo = await ElectionInfo.findOne().exec().catch(err => {
+    const electionInfo = await ElectionInfo.findOne().exec();
+    if (!electionInfo) {
       i.reply({
-        content: "Error retrieving election info: " + err.toString(),
+        content: "Error retrieving election info",
         ephemeral: true,
       });
-      return undefined
-    });
-    if (electionInfo === undefined || electionInfo === null) return;
+      return;
+    };
 
     if (electionInfo.currentPhase != 1)
       return i.update({
@@ -78,14 +78,7 @@ export default class ElectionRegistration extends Module {
         components: [],
       });
 
-    const electionCandidate = await ElectionCandidate.findOne({ discordId: candidate?.user.id }).exec().catch(err => {
-      i.reply({
-        content: "Error retrieving election candidate: " + err.toString(),
-        ephemeral: true,
-      });
-      return undefined
-    });
-    if (electionCandidate === undefined) return;
+    const electionCandidate = await ElectionCandidate.findOne({ discordId: candidate?.user.id }).exec();
     if (electionCandidate)
       return i.update({
         content: "You have already entered this election.",
@@ -100,7 +93,7 @@ export default class ElectionRegistration extends Module {
 
     i.update({ content: "Confirmed!", components: [] });
 
-    const updatesChannel = this.client?.channels.cache.get(
+    const updatesChannel = this.client!.channels.cache.get(
       config.election_updates_channel,
     ) as TextChannel | null;
     if (!updatesChannel) return;
@@ -137,7 +130,7 @@ export default class ElectionRegistration extends Module {
 
     i.update({ content: "Confirmed", components: [] });
 
-    const updatesChannel = this.client?.channels.cache.get(
+    const updatesChannel = this.client!.channels.cache.get(
       config.election_updates_channel,
     ) as TextChannel | null;
     if (!updatesChannel) return;
@@ -181,7 +174,7 @@ export default class ElectionRegistration extends Module {
     await electionInfo.deleteOne().exec();
     await newInfo.save();
 
-    const updatesChannel = this.client?.channels.cache.get(
+    const updatesChannel = this.client!.channels.cache.get(
       config.election_updates_channel,
     ) as TextChannel | null;
     if (!updatesChannel) return;
@@ -265,7 +258,7 @@ export default class ElectionRegistration extends Module {
                 content: "Really? You want to run with yourself?",
                 ephemeral: true,
               });
-            if (runningMate.id == this.client?.user.id)
+            if (runningMate.id == this.client!.user.id)
               return i.reply({
                 content: "I don't want to run with you, I'm a bot!",
                 ephemeral: true,

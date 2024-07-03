@@ -5,8 +5,8 @@ import {
   Collection,
   TextChannel,
 } from "discord.js";
-import timestring from "timestring"; // Why can't they just do this like everyone else
 import lt from "long-timeout";
+import timestring from "timestring"; // Why can't they just do this like everyone else
 import { config } from "..";
 import Account from "../schema/Account";
 import ElectionCandidate from "../schema/ElectionCandidate";
@@ -35,7 +35,7 @@ export default class ElectionManager extends Module {
 
   async onEnable() {
     this.logger.info("Enabled");
-    this.updatesChannel = this.client?.channels.cache.get(
+    this.updatesChannel = this.client!.channels.cache.get(
       config.election_updates_channel,
     ) as TextChannel;
   }
@@ -213,7 +213,7 @@ export default class ElectionManager extends Module {
 
     if (!electionInfo) throw new Error("Failed to fetch election info");
 
-    const guild = this.client?.guilds.cache.get(config.guild);
+    const guild = this.client!.guilds.cache.get(config.guild);
 
     const presidentRole = await guild!.roles.fetch(config.president_role)!;
     const vicePresidentRole = await guild!.roles.fetch(
@@ -229,8 +229,8 @@ export default class ElectionManager extends Module {
 
     await guild?.members.fetch(); // Do the cache things
 
-    for (const account of await Account.find()) {
-      const newRoles = (account.roles as unknown as string[]).filter(
+    for (const account of await Account.find().exec()) {
+      const newRoles = (account.roles).filter(
         (role) => !electedRoleIds.includes(role),
       );
 
@@ -239,7 +239,7 @@ export default class ElectionManager extends Module {
         await member.roles.remove(electedRoleIds, "Transfer of power");
       }
 
-      if ((account.roles as unknown as string[]) != newRoles)
+      if ((account.roles) != newRoles)
         await Account.updateOne(
           { discordId: account.discordId },
           { roles: newRoles },
@@ -253,7 +253,7 @@ export default class ElectionManager extends Module {
 
     await this.roleAuditor?.auditRoles(); // In case anything sneaky was going on
 
-    const winners = electionInfo.winners! as unknown as string[]; // Already did this...fucking mongoose
+    const winners = electionInfo.winners;
 
     const presidentMember = await guild?.members.fetch(winners[0]);
     const vicePresidentMember = await guild?.members.fetch(winners[1]);
