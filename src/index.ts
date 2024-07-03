@@ -55,8 +55,6 @@ client.on('ready', async (client) => {
 	    { body: slashCommands },
     );
     logger.info(`${slashCommands.length} application commands reloaded`);
-
-    client.user.setPresence({ activities: [{ name: `abcdefg`, type: ActivityType.Watching }]});
 });
 
 client.on("interactionCreate", i => {
