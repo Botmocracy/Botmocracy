@@ -45,7 +45,7 @@ export default class ElectionManager extends Module {
 
     this.votingHandler!.draftBallots = new Map(); // Reset this
 
-    const info = await ElectionInfo.findOne();
+    const info = await ElectionInfo.findOne().exec();
     if (!info) return this.logger.error("Failed to get election info.");
     if (info.processStartTime == undefined || info.currentPhase == undefined)
       return this.logger.error("Election info is missing details");
@@ -119,7 +119,7 @@ export default class ElectionManager extends Module {
     if (!currentInfo)
       throw new Error("Unable to update election phase: Info fetch failed");
 
-    await currentInfo.deleteOne();
+    await currentInfo.deleteOne().exec();
 
     const newInfo = new ElectionInfo({
       currentPhase: phase,
@@ -187,7 +187,7 @@ export default class ElectionManager extends Module {
   async elect(elected: string) {
     const candidateInfo = await ElectionCandidate.findOne({
       discordId: elected,
-    });
+    }).exec();
     if (!candidateInfo)
       throw new Error("Elected candidate isn't a candidate...???");
 
@@ -204,7 +204,7 @@ export default class ElectionManager extends Module {
       winners: [elected, runningMate],
     });
 
-    await currentElectionInfo?.deleteOne();
+    await currentElectionInfo?.deleteOne().exec();
     newElectionInfo.save();
   }
 
@@ -313,9 +313,9 @@ export default class ElectionManager extends Module {
       currentPhase: ElectionPhase.INACTIVE,
     });
 
-    //if (newElectionInfo.processStartTime!.getTime() < Date.now()) return rej("Election is scheduled for the past. This will not end well.")
+    if (newElectionInfo.processStartTime!.getTime() < Date.now()) throw new Error("Election is scheduled for the past. This will not end well.")
 
-    await currentInfo.deleteOne();
+    await currentInfo.deleteOne().exec();
     await newElectionInfo.save();
 
     this.run();
