@@ -17,19 +17,20 @@ export default class Auth extends Module {
     async getMinecraftNameFromDiscordId(id: string) {
         try {
             if (this.nameCache.has(id)) return this.nameCache.get(id);
-
+            this.logger.warn("1", new Date().toISOString())
             const account = await Account.findOne({ discordId: id }).exec();
-
+            this.logger.warn("2", new Date().toISOString())
             if (!account || !account.minecraftUUID) return undefined;
-
+            this.logger.warn("3", new Date().toISOString())
             const MojangRes = await axios.get(`https://sessionserver.mojang.com/session/minecraft/profile/${account.minecraftUUID}`);
-
+            this.logger.warn("4", new Date().toISOString())
             if (MojangRes.data.name) {
                 this.nameCache.set(id, MojangRes.data.name);
                 return MojangRes.data.name;
             }
             else return undefined;
-        } catch (error) {
+        } catch (error: any) {
+            this.logger.warn(error, new Date().toISOString())
             return undefined;
         }    
     }
