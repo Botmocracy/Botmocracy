@@ -96,7 +96,7 @@ export default class ElectionRegistration extends Module {
       discordId: candidate?.user.id,
       runningMateDiscordId: runningMate?.user.id,
     });
-    candidateInfo.save();
+    await candidateInfo.save();
 
     i.update({ content: "Confirmed!", components: [] });
 
@@ -336,7 +336,7 @@ export default class ElectionRegistration extends Module {
             const candidates = await ElectionCandidate.find().exec();
 
             if (!candidates) {
-              await i.reply({
+              i.reply({
                 content:
                   "Unable to fetch the candidates list. Please try again later.",
                 ephemeral: true,
