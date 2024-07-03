@@ -90,6 +90,7 @@ export default class Info extends Module {
                         if (!townData) return i.editReply({ content: "This town does not exist." });
 
                         if (await Town.findOne({ name: townName }).exec() != null) return i.editReply({ content: "This town is already registered." });
+                        this.logger.warn("one", new Date().toISOString());
 
                         const town = new Town({
                             name: townData['Town Name'],
@@ -98,15 +99,19 @@ export default class Info extends Module {
                             coords: `${townData['X']} ${townData['Y']} ${townData['Z']}`,
                             rank: townData['Town Rank']
                         });
+                        this.logger.warn("two", new Date().toISOString());
 
                         const minecraftName = await this.auth?.getMinecraftNameFromDiscordId(i.user.id);
+                        this.logger.warn("three", new Date().toISOString());
 
                         const { data: memberData } = await axios.get("https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members");
+                        this.logger.warn("four", new Date().toISOString());
                         const executorMemberData = memberData.filter((v: { [key: string]: string }) =>
                             v["Username"] == minecraftName ||
                             v["Temporary Usernames"].split(", ").includes(minecraftName) ||
                             v["Former Usernames"].split(", ").includes(minecraftName)
                         );
+                        this.logger.warn("five", new Date().toISOString());
 
                         if (!minecraftName || executorMemberData.length == 0) return i.editReply({ content: "I wasn't able to find your member info." });
 
