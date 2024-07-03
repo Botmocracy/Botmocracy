@@ -287,8 +287,7 @@ export default class ElectionManager extends Module {
             `The next election process has been scheduled to begin at ${this.timestamp(nextElectionTime)}.`,
           ].join("\n"),
         );
-      })
-      .catch((err) => this.logger.error(err));
+      });
 
     const governmentChatChannel: TextChannel = this.client!.channels.cache.get(
       config.government_chat_channel,
@@ -332,7 +331,6 @@ export default class ElectionManager extends Module {
         this.updatesChannel!.send(
           `Well....this is awkward. No candidates are entered/have voted in the election. Roles will remain as are until the next scheduled one at ${this.timestamp(nextElectionTime)}`,
         );
-      })
-      .catch((err) => this.logger.error(err));
+      });
   }
 }

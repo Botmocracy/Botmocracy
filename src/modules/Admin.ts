@@ -97,7 +97,7 @@ export default class Admin extends Module {
         .setDescription("Evaluates code")
         .setDefaultMemberPermissions(8)
         .addStringOption((o) =>
-          o.setName("code").setDescription("The code 2 run"),
+          o.setName("code").setDescription("The code 2 run").setRequired(true),
         ),
 
       executor: async (i: ChatInputCommandInteraction) => {
@@ -109,7 +109,7 @@ export default class Admin extends Module {
           const result = eval(i.options.getString("code", true));
           if (result)
             i.reply({ content: `\`\`\`${result}\`\`\``, ephemeral: true });
-        } catch (err: any) {
+        } catch (err) {
           i.reply({ content: `\`\`\`${err}\`\`\``, ephemeral: true });
         }
       },

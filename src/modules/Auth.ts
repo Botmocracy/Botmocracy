@@ -22,25 +22,20 @@ export default class Auth extends Module {
   }
 
   async getMinecraftNameFromDiscordId(id: string) {
-    try {
-      if (this.nameCache.has(id)) return this.nameCache.get(id);
+    if (this.nameCache.has(id)) return this.nameCache.get(id);
 
-      const account = await Account.findOne({ discordId: id }).exec();
+    const account = await Account.findOne({ discordId: id }).exec();
 
-      if (!account || !account.minecraftUUID) return undefined;
+    if (!account || !account.minecraftUUID) return undefined;
 
-      const MojangRes = await axios.get(
-        `https://api.allorigins.win/raw?url=https://sessionserver.mojang.com/session/minecraft/profile/${account.minecraftUUID}`,
-      );
-      
-      if (MojangRes.data.name) {
-        this.nameCache.set(id, MojangRes.data.name);
-        return MojangRes.data.name;
-      } else return undefined;
-    } catch (error: any) {
-      this.logger.warn(error, new Date().toISOString());
-      return undefined;
-    }
+    const MojangRes: any = await axios.get(
+      `https://api.allorigins.win/raw?url=https://sessionserver.mojang.com/session/minecraft/profile/${account.minecraftUUID}`,
+    );
+    
+    if (MojangRes.data.name) {
+      this.nameCache.set(id, MojangRes.data.name);
+      return MojangRes.data.name;
+    } else return undefined;
   }
 
   async getMinecraftOrDiscordName(
@@ -135,11 +130,15 @@ export default class Auth extends Module {
           req = await axios.get(
             `https://minecraftauth.me/api/lookup?discord=${i.user.id}`,
           );
-        } catch {
-          i.editReply({
-            content: "You need to verify with https://minecraftauth.me first.",
-          });
-          return;
+        } catch (err) {
+          if (axios.isAxiosError(err) && err.status == 400) {
+            i.editReply({
+              content: "You need to verify with https://minecraftauth.me first.",
+            });
+            return;
+          } else {
+            throw err
+          }
         }
 
         const data = req.data;
