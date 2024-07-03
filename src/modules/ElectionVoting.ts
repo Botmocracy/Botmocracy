@@ -152,7 +152,8 @@ export default class ElectionVoting extends Module {
         this.draftBallots.set(i.user.id, ballot);
 
         const ballotPage = Math.floor(preference / 4);
-        i.update(await this.getVotingPage(ballotPage, i.user));
+        await i.deferUpdate()
+        i.editReply(await this.getVotingPage(ballotPage, i.user));
     }
 
     async submitVote(i: ButtonInteraction) {
@@ -180,7 +181,8 @@ export default class ElectionVoting extends Module {
             outputMessage += `\nPreference ${iAsNumber + 1}: **${await this.authModule.getMinecraftOrDiscordName(draftBallot[iAsNumber]!, true)}**`;
         }
 
-        i.update({ content: outputMessage, components: [row] });
+        await i.deferUpdate();
+        i.editReply({ content: outputMessage, components: [row] });
     }
 
     async confirmSubmitVote(i: ButtonInteraction) {
@@ -203,7 +205,8 @@ export default class ElectionVoting extends Module {
         await ElectionVote.deleteOne({ discordId: i.user.id }).exec();
         await vote.save();
 
-        i.update({ content: "Saved! Thanks for voting!", components: [] });
+        await i.deferUpdate();
+        i.editReply({ content: "Saved! Thanks for voting!", components: [] });
         this.logger.info(`Saved vote from ${i.user.tag} with ${preferences.length} preferences`);
     }
 }
