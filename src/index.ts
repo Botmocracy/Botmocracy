@@ -60,7 +60,7 @@ client.on("ready", async (client) => {
     value.onModulesLoaded(modules);
   });
 
-  await rest.put(Routes.applicationCommands(client!.user!.id), {
+  rest.put(Routes.applicationCommands(client!.user!.id), {
     body: slashCommands,
   });
   logger.info(`${slashCommands.length} application commands reloaded`);

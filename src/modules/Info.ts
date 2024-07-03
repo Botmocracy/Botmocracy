@@ -79,7 +79,7 @@ export default class Info extends Module {
               name: i.options.getString("name"),
             }).catch(() => null);
             if (!res) {
-              await i.editReply(
+              i.editReply(
                 `Invalid town \`${i.options.getString("name")}\``,
               );
               return;
@@ -94,7 +94,7 @@ export default class Info extends Module {
               )
               .setColor("Blurple");
 
-            await i.editReply({ embeds: [embed] });
+            i.editReply({ embeds: [embed] });
           },
         },
         add: {
@@ -164,10 +164,10 @@ export default class Info extends Module {
               });
 
             account.citizen = true;
-            account.save();
-
+            await account.save();
             await town.save();
-            await i.editReply({ content: "Successfully added town!" });
+
+            i.editReply({ content: "Successfully added town!" });
             const member = await this.client?.guilds.cache
               .get(config.guild)
               ?.members.fetch(i.user);

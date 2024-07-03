@@ -126,7 +126,7 @@ export default class ElectionManager extends Module {
       processStartTime: currentInfo.processStartTime,
     });
 
-    newInfo.save();
+    await newInfo.save();
   }
 
   async beginRegistration() {
@@ -205,7 +205,7 @@ export default class ElectionManager extends Module {
     });
 
     await currentElectionInfo?.deleteOne().exec();
-    newElectionInfo.save();
+    await newElectionInfo.save();
   }
 
   async transition() {
