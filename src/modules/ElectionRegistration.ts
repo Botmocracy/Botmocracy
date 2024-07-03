@@ -45,7 +45,7 @@ export default class ElectionRegistration extends Module {
     this.electionManager = modules.get("ElectionManager") as ElectionManager;
   }
 
-  confirmCandidacy(i: ButtonInteraction) {
+  async confirmCandidacy(i: ButtonInteraction) {
     const userIds = i.customId.split("-");
     userIds.shift(); // Remove "confirmcandidacy"
 
@@ -60,50 +60,54 @@ export default class ElectionRegistration extends Module {
     const candidate = i.member;
     const runningMate = i.guild.members.cache.get(userIds[1]);
 
-    ElectionInfo.findOne()
-      .then((data: any) => {
-        if (data.currentPhase != 1)
-          return i.update({
-            content:
-              "Election registration is not currently open. Please refer to <#" +
-              config.election_updates_channel +
-              "> for more information.",
-            components: [],
-          });
-
-        ElectionCandidate.findOne({ discordId: candidate?.user.id }).then(
-          (data) => {
-            if (data)
-              return i.update({
-                content: "You have already entered this election.",
-                components: [],
-              });
-
-            const candidateInfo = new ElectionCandidate({
-              discordId: candidate?.user.id,
-              runningMateDiscordId: runningMate?.user.id,
-            });
-            candidateInfo.save();
-
-            i.update({ content: "Confirmed!", components: [] });
-
-            const updatesChannel = this.client?.channels.cache.get(
-              config.election_updates_channel,
-            ) as TextChannel | null;
-            if (!updatesChannel) return;
-
-            updatesChannel.send(
-              `${candidate} has entered the election! Their running-mate is ${runningMate}!`,
-            );
-          },
-        );
-      })
-      .catch((err) => {
-        i.reply({
-          content: "Error retrieving election info: " + err.toString(),
-          ephemeral: true,
-        });
+    const electionInfo = await ElectionInfo.findOne().exec().catch(err => {
+      i.reply({
+        content: "Error retrieving election info: " + err.toString(),
+        ephemeral: true,
       });
+      return undefined
+    });
+    if (electionInfo === undefined || electionInfo === null) return;
+
+    if (electionInfo.currentPhase != 1)
+      return i.update({
+        content:
+          "Election registration is not currently open. Please refer to <#" +
+          config.election_updates_channel +
+          "> for more information.",
+        components: [],
+      });
+
+    const electionCandidate = await ElectionCandidate.findOne({ discordId: candidate?.user.id }).exec().catch(err => {
+      i.reply({
+        content: "Error retrieving election candidate: " + err.toString(),
+        ephemeral: true,
+      });
+      return undefined
+    });
+    if (electionCandidate === undefined) return;
+    if (electionCandidate)
+      return i.update({
+        content: "You have already entered this election.",
+        components: [],
+      });
+
+    const candidateInfo = new ElectionCandidate({
+      discordId: candidate?.user.id,
+      runningMateDiscordId: runningMate?.user.id,
+    });
+    candidateInfo.save();
+
+    i.update({ content: "Confirmed!", components: [] });
+
+    const updatesChannel = this.client?.channels.cache.get(
+      config.election_updates_channel,
+    ) as TextChannel | null;
+    if (!updatesChannel) return;
+
+    updatesChannel.send(
+      `${candidate} has entered the election! Their running-mate is ${runningMate}!`,
+    );
   }
 
   async confirmWithdrawal(i: ButtonInteraction) {
@@ -117,19 +121,19 @@ export default class ElectionRegistration extends Module {
     const runningAsPrimary = await ElectionCandidate.findOne({
       discordId: userIds[0],
       runningMateDiscordId: userIds[1],
-    });
+    }).exec();
     const runningAsSecondary = await ElectionCandidate.findOne({
       discordId: userIds[1],
       runningMateDiscordId: userIds[0],
-    });
+    }).exec();
 
     if (!runningAsPrimary && !runningAsSecondary)
       return i.reply({
         content: "Oops. Looks like something broke.",
         ephemeral: true,
       });
-    if (runningAsPrimary) runningAsPrimary.deleteOne();
-    if (runningAsSecondary) runningAsSecondary.deleteOne();
+    if (runningAsPrimary) runningAsPrimary.deleteOne().exec();
+    if (runningAsSecondary) runningAsSecondary.deleteOne().exec();
 
     i.update({ content: "Confirmed", components: [] });
 
@@ -174,7 +178,7 @@ export default class ElectionRegistration extends Module {
       processStartTime: newElectionTime,
     });
 
-    await electionInfo.deleteOne();
+    await electionInfo.deleteOne().exec();
     await newInfo.save();
 
     const updatesChannel = this.client?.channels.cache.get(
@@ -301,11 +305,11 @@ export default class ElectionRegistration extends Module {
             const runningAsPrimary = await ElectionCandidate.findOne({
               discordId: i.user.id,
               runningMateDiscordId: runningWith.id,
-            });
+            }).exec();
             const runningAsSecondary = await ElectionCandidate.findOne({
               discordId: runningWith.id,
               runningMateDiscordId: i.user.id,
-            });
+            }).exec();
 
             if (!runningAsPrimary && !runningAsSecondary)
               return i.reply({

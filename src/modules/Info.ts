@@ -98,7 +98,7 @@ export default class Info extends Module {
           },
         },
         add: {
-          executor: async (i: ChatInputCommandInteraction): Promise<any> => {
+          executor: async (i: ChatInputCommandInteraction) => {
             await i.deferReply({ ephemeral: true });
 
             const account = await Account.findOne({

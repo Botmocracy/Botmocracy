@@ -95,7 +95,7 @@ export default class Auth extends Module {
     const allowedGuilds = [config.guild];
     if (!allowedGuilds.includes(member.guild.id)) return;
 
-    const account = await Account.findOne({ discordId: member.id });
+    const account = await Account.findOne({ discordId: member.id }).exec();
     if (!account) return;
 
     const roles = account.roles as unknown as string[];
