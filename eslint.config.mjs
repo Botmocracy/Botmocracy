@@ -11,8 +11,8 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        project: "./tsconfig.json"
-      }
+        project: "./tsconfig.json",
+      },
     },
     rules: {
       "@typescript-eslint/no-non-null-assertion": "off",

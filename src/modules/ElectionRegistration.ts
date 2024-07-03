@@ -67,7 +67,7 @@ export default class ElectionRegistration extends Module {
         ephemeral: true,
       });
       return;
-    };
+    }
 
     if (electionInfo.currentPhase != 1)
       return i.update({
@@ -78,7 +78,9 @@ export default class ElectionRegistration extends Module {
         components: [],
       });
 
-    const electionCandidate = await ElectionCandidate.findOne({ discordId: candidate?.user.id }).exec();
+    const electionCandidate = await ElectionCandidate.findOne({
+      discordId: candidate?.user.id,
+    }).exec();
     if (electionCandidate)
       return i.update({
         content: "You have already entered this election.",
