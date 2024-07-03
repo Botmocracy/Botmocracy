@@ -6,7 +6,7 @@ if(fs.existsSync(".env")) {
 }
 
 
-import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
+import { ActivityType, Client, GatewayIntentBits, REST, Routes } from "discord.js";
 import { readdirSync, readFileSync } from "fs";
 import mongoose from 'mongoose';
 import Module from "./modules/abstract/Module";
@@ -55,6 +55,8 @@ client.on('ready', async (client) => {
 	    { body: slashCommands },
     );
     logger.info(`${slashCommands.length} application commands reloaded`);
+
+    client.user.setPresence({ activities: [{ name: `abcdefg`, type: ActivityType.Watching }]});
 });
 
 client.on("interactionCreate", i => {
