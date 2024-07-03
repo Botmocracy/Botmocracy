@@ -1,18 +1,18 @@
 import { model, Schema } from "mongoose";
 
 interface ElectionVote {
-    discordId: string;
-    preferences: string[];
+  discordId: string;
+  preferences: string[];
 }
 
 const electionVoteSchema = new Schema<ElectionVote>({
-    discordId: String,
-    preferences: Array<string>
+  discordId: String,
+  preferences: [String],
 });
 
 let name = "ElectionVote";
 if (process.env.DEV) {
-    name += "DEV";
+  name += "DEV";
 }
 
-export default model<ElectionVote>(name, electionVoteSchema)
+export default model<ElectionVote>(name, electionVoteSchema);
