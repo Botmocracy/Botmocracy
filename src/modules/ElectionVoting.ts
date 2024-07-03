@@ -85,23 +85,23 @@ export default class ElectionVoting extends Module {
     });
   }
 
-  async getVotingPage(page: number, user: User): Promise<InteractionReplyOptions> {
+  async getVotingPage(
+    page: number,
+    user: User,
+  ): Promise<InteractionReplyOptions> {
     // See if they've submitted a vote before and if so fill in the values
     if (page == 0 && !this.draftBallots.get(user.id)) {
       const previousVote = await ElectionVote.findOne({
         discordId: user.id,
       }).exec();
       if (previousVote) {
-        this.draftBallots.set(
-          user.id,
-          previousVote.preferences,
-        );
+        this.draftBallots.set(user.id, previousVote.preferences);
       }
     }
 
     const electionPhase = await ElectionInfo.findOne().exec();
     if (electionPhase?.currentPhase != 2)
-      return ({ content: "Voting is not currently open.", components: [] });
+      return { content: "Voting is not currently open.", components: [] };
 
     const candidates = await ElectionCandidate.find().exec();
     const candidatesFormattedAsMenuOptions: SelectMenuComponentOptionData[] =
@@ -179,11 +179,11 @@ export default class ElectionVoting extends Module {
     );
     votingMessageComponents.push(buttonRow);
 
-    return ({
+    return {
       content: `**Election ballot page ${page + 1}/${Math.ceil(candidates.length / 4)}**`,
       components: votingMessageComponents,
       ephemeral: true,
-    });
+    };
   }
 
   async recordVotePreference(i: SelectMenuInteraction) {

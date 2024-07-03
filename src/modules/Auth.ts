@@ -21,20 +21,21 @@ export default class Auth extends Module {
     this.client!.on("guildMemberAdd", (member) => this.onMemberJoin(member));
   }
 
-  async getMinecraftNameFromDiscordId(id: string) {
+  async getMinecraftNameFromDiscordId(id: string): Promise<string | undefined> {
     if (this.nameCache.has(id)) return this.nameCache.get(id);
 
     const account = await Account.findOne({ discordId: id }).exec();
 
     if (!account || !account.minecraftUUID) return undefined;
 
-    const MojangRes: any = await axios.get(
+    const { data, status } = await axios.get(
       `https://api.allorigins.win/raw?url=https://sessionserver.mojang.com/session/minecraft/profile/${account.minecraftUUID}`,
     );
-    
-    if (MojangRes.data.name) {
-      this.nameCache.set(id, MojangRes.data.name);
-      return MojangRes.data.name;
+    if (status != 200) return undefined;
+
+    if (data.name) {
+      this.nameCache.set(id, data.name);
+      return data.name;
     } else return undefined;
   }
 
@@ -124,24 +125,16 @@ export default class Auth extends Module {
           i.editReply({ content: "You're already verified." });
           return;
         }
-        let req;
-
-        try {
-          req = await axios.get(
-            `https://minecraftauth.me/api/lookup?discord=${i.user.id}`,
-          );
-        } catch (err) {
-          if (axios.isAxiosError(err) && err.status == 400) {
-            i.editReply({
-              content: "You need to verify with https://minecraftauth.me first.",
-            });
-            return;
-          } else {
-            throw err
-          }
+        const { data, status } = await axios.get(
+          `https://minecraftauth.me/api/lookup?discord=${i.user.id}`,
+        );
+        if (status == 400) {
+          i.editReply({
+            content: "You need to verify with https://minecraftauth.me first.",
+          });
+          return;
         }
 
-        const data = req.data;
         const uuid = data.minecraft.identifier;
         const members = await this.getMembers();
         const name = await this.getName(uuid);

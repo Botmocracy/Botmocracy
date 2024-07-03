@@ -37,7 +37,7 @@ export default class ElectionCounter extends Module {
 
     const votesRaw = await ElectionVote.find().exec();
     for (const vote of votesRaw) {
-      const ballot = (vote.preferences).filter((p) =>
+      const ballot = vote.preferences.filter((p) =>
         this.candidates.includes(p),
       );
       if (ballot.length == 0) return;
@@ -92,9 +92,7 @@ export default class ElectionCounter extends Module {
       this.manager.elect(winner);
     } else {
       // Now we need to figure out who to eliminate. Put everyone into an array where their location is based on number of votes and work it out that way.
-      const candidatesSortedByNumberOfVotes: string[][] = Array(
-        numberOfVotes,
-      )
+      const candidatesSortedByNumberOfVotes: string[][] = Array(numberOfVotes)
         .fill(null)
         .map(() => {
           return [];

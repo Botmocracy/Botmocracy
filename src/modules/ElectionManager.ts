@@ -76,12 +76,12 @@ export default class ElectionManager extends Module {
             this.votingBegin - Date.now(),
           ),
         );
-        // eslint-disable-next-line no-fallthrough
+      // eslint-disable-next-line no-fallthrough
       case 2:
         this.timeouts.push(
           lt.setTimeout(() => this.endVoting(), this.votingEnd - Date.now()),
         );
-        // eslint-disable-next-line no-fallthrough
+      // eslint-disable-next-line no-fallthrough
       case 3:
         this.timeouts.push(
           lt.setTimeout(
@@ -230,7 +230,7 @@ export default class ElectionManager extends Module {
     await guild?.members.fetch(); // Do the cache things
 
     for (const account of await Account.find().exec()) {
-      const newRoles = (account.roles).filter(
+      const newRoles = account.roles.filter(
         (role) => !electedRoleIds.includes(role),
       );
 
@@ -239,7 +239,7 @@ export default class ElectionManager extends Module {
         await member.roles.remove(electedRoleIds, "Transfer of power");
       }
 
-      if ((account.roles) != newRoles)
+      if (account.roles != newRoles)
         await Account.updateOne(
           { discordId: account.discordId },
           { roles: newRoles },
@@ -275,19 +275,18 @@ export default class ElectionManager extends Module {
       );
     }
 
-    this.scheduleNextElection()
-      .then((nextElectionTime) => {
-        (
-          this.client!.channels.cache.get(
-            config.announcement_channel,
-          )! as TextChannel
-        ).send(
-          [
-            `@everyone give a big hand to our new President and Vice President, <@${winners[0]}> and <@${winners[1]}>!`,
-            `The next election process has been scheduled to begin at ${this.timestamp(nextElectionTime)}.`,
-          ].join("\n"),
-        );
-      });
+    this.scheduleNextElection().then((nextElectionTime) => {
+      (
+        this.client!.channels.cache.get(
+          config.announcement_channel,
+        )! as TextChannel
+      ).send(
+        [
+          `@everyone give a big hand to our new President and Vice President, <@${winners[0]}> and <@${winners[1]}>!`,
+          `The next election process has been scheduled to begin at ${this.timestamp(nextElectionTime)}.`,
+        ].join("\n"),
+      );
+    });
 
     const governmentChatChannel: TextChannel = this.client!.channels.cache.get(
       config.government_chat_channel,
@@ -312,7 +311,10 @@ export default class ElectionManager extends Module {
       currentPhase: ElectionPhase.INACTIVE,
     });
 
-    if (newElectionInfo.processStartTime!.getTime() < Date.now()) throw new Error("Election is scheduled for the past. This will not end well.")
+    if (newElectionInfo.processStartTime!.getTime() < Date.now())
+      throw new Error(
+        "Election is scheduled for the past. This will not end well.",
+      );
 
     await currentInfo.deleteOne().exec();
     await newElectionInfo.save();
@@ -322,15 +324,14 @@ export default class ElectionManager extends Module {
     ElectionCandidate.deleteMany().exec();
     ElectionVote.deleteMany().exec();
 
-    return (nextElectionTime);
+    return nextElectionTime;
   }
 
   async noElectionCandidatesOrVotes() {
-    this.scheduleNextElection()
-      .then((nextElectionTime) => {
-        this.updatesChannel!.send(
-          `Well....this is awkward. No candidates are entered/have voted in the election. Roles will remain as are until the next scheduled one at ${this.timestamp(nextElectionTime)}`,
-        );
-      });
+    this.scheduleNextElection().then((nextElectionTime) => {
+      this.updatesChannel!.send(
+        `Well....this is awkward. No candidates are entered/have voted in the election. Roles will remain as are until the next scheduled one at ${this.timestamp(nextElectionTime)}`,
+      );
+    });
   }
 }

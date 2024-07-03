@@ -24,17 +24,12 @@ export default class Info extends Module {
   }
 
   async getTownByName(name: string) {
-    const result = await axios.get(
+    const { data } = await axios.get(
       "https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1JSmJtYkYrEx6Am5drhSet17qwJzOKDI7tE7FxPx4YNI&sheetName=New%20World",
       { maxRedirects: 1 },
     );
-    const towns: Record<string, any>[] = [];
 
-    for await (const part of result.data) {
-      towns.push(part);
-    }
-
-    for (const townData of towns) {
+    for (const townData of data) {
       if (townData["Town Name"] == name) {
         return townData;
       }
@@ -79,9 +74,7 @@ export default class Info extends Module {
               name: i.options.getString("name"),
             });
             if (!res) {
-              i.editReply(
-                `Invalid town \`${i.options.getString("name")}\``,
-              );
+              i.editReply(`Invalid town \`${i.options.getString("name")}\``);
               return;
             }
 
@@ -136,12 +129,16 @@ export default class Info extends Module {
             const { data: memberData } = await axios.get(
               "https://script.google.com/macros/s/AKfycbwde4vwt0l4_-qOFK_gL2KbVAdy7iag3BID8NWu2DQ1566kJlqyAS1Y/exec?spreadsheetId=1Hhj_Cghfhfs8Xh5v5gt65kGc4mDW0sC5GWULKidOBW8&sheetName=Members",
             );
-            const executorMemberData = memberData.filter(
-              (v: Record<string, string>) =>
-                v["Username"] == minecraftName ||
-                v["Temporary Usernames"].split(", ").includes(minecraftName) ||
-                v["Former Usernames"].split(", ").includes(minecraftName),
-            );
+            const executorMemberData = minecraftName
+              ? memberData.filter(
+                  (v: Record<string, string>) =>
+                    v["Username"] == minecraftName ||
+                    v["Temporary Usernames"]
+                      .split(", ")
+                      .includes(minecraftName) ||
+                    v["Former Usernames"].split(", ").includes(minecraftName),
+                )
+              : [];
 
             if (!minecraftName || executorMemberData.length == 0)
               return i.editReply({
@@ -168,9 +165,9 @@ export default class Info extends Module {
             await town.save();
 
             i.editReply({ content: "Successfully added town!" });
-            const member = await this.client!.guilds.cache
-              .get(config.guild)
-              ?.members.fetch(i.user);
+            const member = await this.client!.guilds.cache.get(
+              config.guild,
+            )?.members.fetch(i.user);
             await member!.roles.add(config.citizen_role);
             const notificationChannel = this.client!.channels.cache.get(
               config.town_notifications_channel,

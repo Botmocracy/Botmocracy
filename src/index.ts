@@ -5,12 +5,7 @@ if (fs.existsSync(".env")) {
   dotenv.config();
 }
 
-import {
-  Client,
-  GatewayIntentBits,
-  REST,
-  Routes,
-} from "discord.js";
+import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
 import { readdirSync, readFileSync } from "fs";
 import mongoose from "mongoose";
 import Module from "./modules/abstract/Module";
@@ -37,10 +32,12 @@ const logger = new Logger("Index");
 const modules = new Map<string, Module>();
 
 process
-  .on('unhandledRejection', (reason: Error | any, p) => {
-    logger.error(`Unhandled Rejection at Promise ${p}: ${reason?.stack || reason}`);
+  .on("unhandledRejection", (reason: Error | any, p) => {
+    logger.error(
+      `Unhandled Rejection at Promise ${p}: ${reason?.stack || reason}`,
+    );
   })
-  .on('uncaughtException', err => {
+  .on("uncaughtException", (err) => {
     logger.error(`Uncaught Exception: ${err.stack || err}`);
     process.exit(1);
   });
